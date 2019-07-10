@@ -5,7 +5,6 @@ import java.io.IOException;
 
 import javafx.application.Platform;
 
-import org.apache.commons.io.FileUtils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
@@ -20,9 +19,16 @@ import it.polito.s223833.utils.UnzipClass;
 
 public class JAFFEClassifier extends Classifier implements Runnable 
 {
-	public JAFFEClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, boolean histogramEqualization, boolean faceDetection) 
+	private boolean subdivision;
+	private double trainPercentage, validationPercentage, testPercentage;
+	
+	public JAFFEClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, boolean histogramEqualization, boolean faceDetection, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage)
 	{
-		super(controller, inputFile, outputDirectory, width, height, false, histogramEqualization, faceDetection);
+		super(controller, inputFile, outputDirectory, false, width, height, false, histogramEqualization, faceDetection);
+		this.subdivision = subdivision;
+		this.trainPercentage = trainPercentage;
+		this.validationPercentage = validationPercentage;
+		this.testPercentage = testPercentage;
 	}
 
 	@Override
@@ -37,7 +43,7 @@ public class JAFFEClassifier extends Classifier implements Runnable
 		} 
 		catch (IOException e1) 
 		{
-			ExceptionManager("There was an error during the extraction of the JAFFE files.", false);
+			ExceptionManager("There was an error during the extraction of the JAFFE files.");
 	    	return;
 		}
 		
@@ -51,7 +57,7 @@ public class JAFFEClassifier extends Classifier implements Runnable
 			} 
 			catch (SecurityException e)
 			{
-				ExceptionManager("There was a problem while creating classification folders.", false);
+				ExceptionManager("There was a problem while creating classification folders.");
 		    	return;
 			}
 	
@@ -71,7 +77,7 @@ public class JAFFEClassifier extends Classifier implements Runnable
 				if((!file.getName().equalsIgnoreCase("README")) && (!file.getName().equalsIgnoreCase(".DS_Store")))
 				{
 					// Verifies that the filename has the typical form of the JAFFE database files.
-					if ((file.isFile())&& (file.getName().matches("[A-Z]{2}\\.[A-Z]{2}[0-9]\\.[0-9]*\\.tiff")))
+					if ((file.isFile()) && (file.getName().matches("[A-Z]{2}\\.[A-Z]{2}[0-9]\\.[0-9]*\\.tiff")))
 					{
 						faceFound = true;
 						Mat resizedFace = Mat.zeros(imageSize, CvType.CV_8UC1);
@@ -92,11 +98,11 @@ public class JAFFEClassifier extends Classifier implements Runnable
 	
 							Rect[] facesArray = faces.toArray();
 							// If at least one face is detected, the photo will be cropped to the face itself.
-							if(facesArray.length>0)
+							if(facesArray.length > 0)
 							{
-								Rect rectCrop=null;
+								Rect rectCrop = null;
 								// Only the first face will be saved: if an image has more faces, the others are lost.
-								if(facesArray[0].width>facesArray[0].height)
+								if(facesArray[0].width > facesArray[0].height)
 								{
 									rectCrop = new Rect(facesArray[0].x, facesArray[0].y, facesArray[0].width, facesArray[0].width);
 								}
@@ -105,7 +111,7 @@ public class JAFFEClassifier extends Classifier implements Runnable
 									rectCrop = new Rect(facesArray[0].x, facesArray[0].y, facesArray[0].height, facesArray[0].height);
 								}
 								// The face-only photo will be saved in a new matrix.
-								Mat face = new Mat(image,rectCrop);
+								Mat face = new Mat(image, rectCrop);
 								// Scaling the photo to the desired size.
 								Imgproc.resize(face, resizedFace, imageSize);	
 								// Release of the initialized variables.
@@ -113,7 +119,7 @@ public class JAFFEClassifier extends Classifier implements Runnable
 							}
 							else
 							{
-								faceFound=false;
+								faceFound = false;
 							}
 							// Release of the initialized variables.
 							faces.release();
@@ -163,58 +169,53 @@ public class JAFFEClassifier extends Classifier implements Runnable
 					} 
 					else 
 					{
-						ExceptionManager("The format of the images in the input file is not the one expected.", true);
+						ExceptionManager("The format of the images in the input file is not the one expected.");
 				    	return;
 					}
 				}			
 				// Increase the count of the number of photos classified (or, if not classified, of the analyzed photos).
 				classified++;
 				// Calculation of the percentage of completion of the current operation and update of the classification progress bar.
-				percentage = (double) classified / (double) numberOfFiles;
+				percentage = (double)classified / (double)numberOfFiles;
 				UpdateBar();	
 				// Next photo.
 				i++;
 			}	
+			// If subdivision is active, the images will be divided between training, validation and test.
+			if((subdivision)&&(!Thread.currentThread().isInterrupted()))
+			{
+				try 
+				{
+					Platform.runLater(() -> controller.setPhaseLabel("Phase 3: subdivision between training, validation and test folder..."));
+					this.SubdivideImages(trainPercentage, validationPercentage, testPercentage);
+				} 
+				catch (SecurityException | IOException e) 
+				{
+					ExceptionManager("An error occurred during the subdivision.");
+			    	return;
+				}
+			}
 		}
 		// If a cancellation request has been made by the user, both temporary and classification folders will be deleted.
 		if (Thread.currentThread().isInterrupted()) 
 		{
-			DeleteFolders(true);	
+			DeleteAllDirectories();	
 			Platform.runLater(() -> controller.ShowAttentionDialog("Classification interrupted.\n"));
 		}	
 		// Otherwise only temporary ones will be deleted.
 		else
 		{
-			Platform.runLater(() -> controller.setPhaseLabel("Phase 3: deleting temporary folders..."));
-			DeleteFolders(false);	
-		}
-		
-		Platform.runLater(() -> controller.StartStopClassification(false, false));
-	}
-	
-	/* Method for eliminating temporary directories and, optionally, the classification directories. */
-	private void DeleteFolders(boolean deleteClassificationFolders)
-	{
-		try 
-		{
-			FileUtils.deleteDirectory(new File(tempDirectory));
-			if(deleteClassificationFolders)
+			if(subdivision)
 			{
-				DeleteClassificationFolders();
+				Platform.runLater(() -> controller.setPhaseLabel("Phase 4: deleting temporary folders..."));
 			}
-		} 
-		catch (IOException e) 
-		{
-			Platform.runLater(() -> {controller.ShowErrorDialog(e.getMessage());
-				controller.StartStopClassification(false, true);});
+			else
+			{
+				Platform.runLater(() -> controller.setPhaseLabel("Phase 3: deleting temporary folders..."));
+			}
+			DeleteTempDirectory();		
 		}
-	}
 	
-	/* Exception handling method. */
-	private void ExceptionManager(String message, boolean deleteClassificationFolders)
-	{
-		DeleteFolders(true);
-    	Platform.runLater(() -> {controller.ShowErrorDialog(message);
-			controller.StartStopClassification(false, true);});
+		Platform.runLater(() -> controller.StartStopClassification(false, false));
 	}
 }

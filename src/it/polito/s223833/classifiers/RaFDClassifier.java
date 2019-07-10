@@ -6,7 +6,6 @@ import java.util.ArrayList;
 
 import javafx.application.Platform;
 
-import org.apache.commons.io.FileUtils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -25,14 +24,18 @@ import it.polito.s223833.utils.UnzipClass;
 public class RaFDClassifier extends Classifier implements Runnable 
 {
 	private CascadeClassifier profileFaceCascade;
-	private boolean profile;
-	private File contemptDirectory = null;
-	
-	public RaFDClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean profile) 
+	private boolean profile, subdivision;
+	private double trainPercentage, validationPercentage, testPercentage;
+
+	public RaFDClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean profile, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage)
 	{
-		super(controller, inputFile, outputDirectory, width, height, grayscale, histogramEqualization, faceDetection);
+		super(controller, inputFile, outputDirectory, true, width, height, grayscale, histogramEqualization, faceDetection);
 		absoluteFaceSize = 400;
-		this.profile=profile;
+		this.subdivision = subdivision;
+		this.trainPercentage = trainPercentage;
+		this.validationPercentage = validationPercentage;
+		this.testPercentage = testPercentage;
+		this.profile = profile;
 		profileFaceCascade = new CascadeClassifier(haarclassifierpath + "haarcascade_profileface.xml");
 	}
 
@@ -48,7 +51,7 @@ public class RaFDClassifier extends Classifier implements Runnable
 		} 
 		catch (IOException e1) 
 		{
-			ExceptionManager("There was an error during the extraction of the RaFD files.", false);
+			ExceptionManager("There was an error during the extraction of the RaFD files.");
 			return;
 		}
 		
@@ -59,12 +62,10 @@ public class RaFDClassifier extends Classifier implements Runnable
 			try 
 			{
 				CreateFolders();
-				contemptDirectory = new File(outputDirectory, "Contempt");
-				contemptDirectory.mkdir();
 			} 
 			catch (SecurityException e) 
 			{
-				ExceptionManager("There was a problem while creating classification folders.", false);
+				ExceptionManager("There was a problem while creating classification folders.");
 		    	return;
 			}
 			
@@ -134,7 +135,7 @@ public class RaFDClassifier extends Classifier implements Runnable
 						// In the case that no frontal faces are detected and the user has chosen to also use the profile photo classifier, then any profile photos will be searched.
 						if (facesArray.length == 0) 
 						{
-							if(profile==true)
+							if(profile == true)
 							{
 								// Verifies the presence of profile faces through the haar profile face classifier.
 								profileFaceCascade.detectMultiScale(image, faces, 1.1, 2, 0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(absoluteFaceSize, absoluteFaceSize), new Size());
@@ -153,7 +154,7 @@ public class RaFDClassifier extends Classifier implements Runnable
 						// If at least one face is detected, the photo will be cropped to the face itself.
 						if (faceFound == true) 
 						{
-							Rect rectCrop=null;
+							Rect rectCrop = null;
 							// Only the first face will be saved: if an image has more faces, the others are lost.
 							if (facesArray[0].width > facesArray[0].height) 
 							{
@@ -230,54 +231,45 @@ public class RaFDClassifier extends Classifier implements Runnable
 				} 
 				else 
 				{
-					ExceptionManager("The format of the images in the input file is not the one expected.", true);
+					ExceptionManager("The format of the images in the input file is not the one expected.");
 			    	return;
 				}
 			}
-		}
+			// If subdivision is active, the images will be divided between training, validation and test.
+			if((subdivision)&&(!Thread.currentThread().isInterrupted()))
+			{
+				try 
+				{
+					Platform.runLater(() -> controller.setPhaseLabel("Phase 3: subdivision between training, validation and test folder..."));
+					this.SubdivideImages(trainPercentage, validationPercentage, testPercentage);
+				} 
+				catch (SecurityException | IOException e) 
+				{
+					ExceptionManager("An error occurred during the subdivision.");
+					return;
+				}
+			}
+		}	
 		// If a cancellation request has been made by the user, both temporary and classification folders will be deleted.
 		if (Thread.currentThread().isInterrupted()) 
 		{
-			DeleteFolders(true);	
+			DeleteAllDirectories();	
 			Platform.runLater(() -> controller.ShowAttentionDialog("Classification interrupted.\n"));
 		}	
 		// Otherwise only temporary ones will be deleted.
 		else
 		{
-			Platform.runLater(() -> controller.setPhaseLabel("Phase 3: deleting temporary folders..."));
-			DeleteFolders(false);	
+			if(subdivision)
+			{
+				Platform.runLater(() -> controller.setPhaseLabel("Phase 4: deleting temporary folders..."));
+			}
+			else
+			{
+				Platform.runLater(() -> controller.setPhaseLabel("Phase 3: deleting temporary folders..."));
+			}
+			DeleteTempDirectory();
 		}
 		
 		Platform.runLater(() -> controller.StartStopClassification(false, false));
-	}
-	
-	/* Method for eliminating temporary directories and, optionally, the classification directories. */
-	private void DeleteFolders(boolean deleteClassificationFolders)
-	{
-		try 
-		{
-			FileUtils.deleteDirectory(new File(tempDirectory));
-			if(deleteClassificationFolders)
-			{
-				DeleteClassificationFolders();
-				if(contemptDirectory!=null)
-				{
-					FileUtils.deleteDirectory(contemptDirectory);
-				}
-			}
-		} 
-		catch (IOException e) 
-		{
-			Platform.runLater(() -> {controller.ShowErrorDialog(e.getMessage());
-				controller.StartStopClassification(false, true);});
-		}
-	}
-	
-	/* Exception handling method. */
-	private void ExceptionManager(String message, boolean deleteClassificationFolders)
-	{
-		DeleteFolders(true);
-    	Platform.runLater(() -> {controller.ShowErrorDialog(message);
-			controller.StartStopClassification(false, true);});
 	}
 }

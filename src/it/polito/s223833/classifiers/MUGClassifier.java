@@ -6,7 +6,6 @@ import java.util.ArrayList;
 
 import javafx.application.Platform;
 
-import org.apache.commons.io.FileUtils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -22,10 +21,17 @@ import it.polito.s223833.utils.UntarClass;
 
 public class MUGClassifier extends Classifier implements Runnable
 {	
-	public MUGClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, boolean grayscale, boolean histogramEqualization, boolean faceDetection)
+	private boolean subdivision;
+	private double trainPercentage, validationPercentage, testPercentage;
+	
+	public MUGClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage)
 	{
-		super(controller, inputFile, outputDirectory, width, height, grayscale, histogramEqualization, faceDetection);
-		absoluteFaceSize=250;
+		super(controller, inputFile, outputDirectory, false, width, height, grayscale, histogramEqualization, faceDetection);
+		absoluteFaceSize = 250;	
+		this.subdivision = subdivision;
+		this.trainPercentage = trainPercentage;
+		this.validationPercentage = validationPercentage;
+		this.testPercentage = testPercentage;
 	}
 	
 	@Override
@@ -40,7 +46,7 @@ public class MUGClassifier extends Classifier implements Runnable
 		} 
 		catch (IOException e1) 
 		{
-			ExceptionManager("There was an error during the extraction of the MUG files.", false);
+			ExceptionManager("There was an error during the extraction of the MUG files.");
 			return;
 		}
 				
@@ -54,21 +60,21 @@ public class MUGClassifier extends Classifier implements Runnable
 			} 
 			catch (SecurityException e)
 			{
-				ExceptionManager("There was a problem while creating classification folders.", false);
+				ExceptionManager("There was a problem while creating classification folders.");
 			 	return;
 			}
 				
 			Platform.runLater(() -> controller.setPhaseLabel("Phase 2: classification..."));
 	
 			// Reading the newly extracted photos.
-			File mugImages = new File(tempDirectory+"\\manual\\images\\");
+			File mugImages = new File(tempDirectory + "\\manual\\images\\");
 			File[] listOfFiles = mugImages.listFiles();
 			// Cycle performed for every single file in the folder. 
-			int i=0, numberOfFiles=listOfFiles.length;	
+			int i = 0, numberOfFiles = listOfFiles.length;	
 			boolean faceFound;
-			while((i<numberOfFiles) && (!Thread.currentThread().isInterrupted()))
+			while((i < numberOfFiles) && (!Thread.currentThread().isInterrupted()))
 			{
-				File file=listOfFiles[i];
+				File file = listOfFiles[i];
 					
 				// Verifies that the filename has the typical form of the MUG database files.
 				if ((file.isFile()) && (file.getName().matches("[0-9]{3}_[a-z]{2}_[0-9]{3}_[0-9]{4}\\.jpg")))
@@ -122,11 +128,11 @@ public class MUGClassifier extends Classifier implements Runnable
 		
 						Rect[] facesArray = faces.toArray();
 						// If at least one face is detected, the photo will be cropped to the face itself.
-						if(facesArray.length>0)
+						if(facesArray.length > 0)
 						{
-							Rect rectCrop=null;
+							Rect rectCrop = null;
 							// Only the first face will be saved: if an image has more faces, the others are lost.
-							if(facesArray[0].width>facesArray[0].height)
+							if(facesArray[0].width > facesArray[0].height)
 							{
 								rectCrop = new Rect(facesArray[0].x, facesArray[0].y, facesArray[0].width, facesArray[0].width);
 							}
@@ -143,7 +149,7 @@ public class MUGClassifier extends Classifier implements Runnable
 						}
 						else
 						{
-							faceFound=false;
+							faceFound = false;
 						}
 						// Release of the initialized variables.
 						faces.release();
@@ -155,35 +161,35 @@ public class MUGClassifier extends Classifier implements Runnable
 				  	}
 				    	
 			    	// Photo classification phase.
-				 	if(faceFound==true)
+				 	if(faceFound == true)
 				  	{
 						if(file.getName().contains("an"))
 					  	{
-							Imgcodecs.imwrite(angerDirectory+"\\"+file.getName(),resizedFace);
+							Imgcodecs.imwrite(angerDirectory + "\\" + file.getName(), resizedFace);
 					 	}
 						else if(file.getName().contains("di"))
 					  	{
-							Imgcodecs.imwrite(disgustDirectory+"\\"+file.getName(),resizedFace);
+							Imgcodecs.imwrite(disgustDirectory + "\\" + file.getName(), resizedFace);
 					  	}
 						else if(file.getName().contains("fe"))
 					 	{
-							Imgcodecs.imwrite(fearDirectory+"\\"+file.getName(),resizedFace);
+							Imgcodecs.imwrite(fearDirectory + "\\" + file.getName(), resizedFace);
 						}
 					 	else if(file.getName().contains("ha"))
 					   	{
-							Imgcodecs.imwrite(happinessDirectory+"\\"+file.getName(),resizedFace);
+							Imgcodecs.imwrite(happinessDirectory + "\\" + file.getName(), resizedFace);
 					  	}
 					   	else if(file.getName().contains("ne"))
 					 	{
-					   		Imgcodecs.imwrite(neutralityDirectory+"\\"+file.getName(),resizedFace);
+					   		Imgcodecs.imwrite(neutralityDirectory + "\\" + file.getName(), resizedFace);
 						}
 					   	else if(file.getName().contains("sa"))
 					 	{
-							Imgcodecs.imwrite(sadnessDirectory+"\\"+file.getName(),resizedFace);
+							Imgcodecs.imwrite(sadnessDirectory + "\\" + file.getName(), resizedFace);
 					  	}		
 					 	else if(file.getName().contains("su"))
 					 	{
-						Imgcodecs.imwrite(surpriseDirectory+"\\"+file.getName(),resizedFace);
+						Imgcodecs.imwrite(surpriseDirectory + "\\" + file.getName(), resizedFace);
 					   	}   							
 						// Release of the initialized variables.
 						resizedFace.release();
@@ -201,7 +207,21 @@ public class MUGClassifier extends Classifier implements Runnable
 				}		
 				else
 				{
-					ExceptionManager("The format of the images in the input file is not the one expected.", true);
+					ExceptionManager("The format of the images in the input file is not the one expected.");
+					return;
+				}
+			}
+			// If subdivision is active, the images will be divided between training, validation and test.
+			if((subdivision)&&(!Thread.currentThread().isInterrupted()))
+			{
+				try 
+				{
+					Platform.runLater(() -> controller.setPhaseLabel("Phase 3: subdivision between training, validation and test folder..."));
+					this.SubdivideImages(trainPercentage, validationPercentage, testPercentage);
+				} 
+				catch (SecurityException | IOException e) 
+				{
+					ExceptionManager("An error occurred during the subdivision.");
 					return;
 				}
 			}
@@ -209,42 +229,23 @@ public class MUGClassifier extends Classifier implements Runnable
 		// If a cancellation request has been made by the user, both temporary and classification folders will be deleted.
 		if (Thread.currentThread().isInterrupted()) 
 		{
-			DeleteFolders(true);	
+			DeleteAllDirectories();	
 			Platform.runLater(() -> controller.ShowAttentionDialog("Classification interrupted.\n"));
 		}	
-		// Otherwise only temporary ones will be deleted.
+		// Otherwise only the temporary one will be deleted.
 		else
 		{
-			Platform.runLater(() -> controller.setPhaseLabel("Phase 3: deleting temporary folders..."));
-			DeleteFolders(false);	
+			if(subdivision)
+			{
+				Platform.runLater(() -> controller.setPhaseLabel("Phase 4: deleting temporary folders..."));
+			}
+			else
+			{
+				Platform.runLater(() -> controller.setPhaseLabel("Phase 3: deleting temporary folders..."));
+			}
+			DeleteTempDirectory();	
 		}
 		
 		Platform.runLater(() -> controller.StartStopClassification(false, false));
-	} 
-	
-	/* Method for eliminating temporary directories and, optionally, the classification directories. */
-	private void DeleteFolders(boolean deleteClassificationFolders)
-	{
-		try 
-		{
-			FileUtils.deleteDirectory(new File(tempDirectory));
-			if(deleteClassificationFolders)
-			{
-				DeleteClassificationFolders();
-			}
-		} 
-		catch (IOException e) 
-		{
-			Platform.runLater(() -> {controller.ShowErrorDialog(e.getMessage());
-				controller.StartStopClassification(false, true);});
-		}
-	}
-	
-	/* Exception handling method. */
-	private void ExceptionManager(String message, boolean deleteClassificationFolders)
-	{
-		DeleteFolders(true);
-    	Platform.runLater(() -> {controller.ShowErrorDialog(message);
-			controller.StartStopClassification(false, true);});
 	}
 }

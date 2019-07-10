@@ -7,7 +7,6 @@ import java.io.BufferedReader;
 
 import javafx.application.Platform;
 
-import org.apache.commons.io.FileUtils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -17,14 +16,19 @@ import it.polito.s223833.MainController;
 
 public class Fer2013Classifier extends Classifier implements Runnable 
 {
-	int width = 48, height = 48, imageCounter = 0;
-	boolean subdivide;
-	File trainingDirectory = null, validationDirectory = null, testDirectory = null;
+	private int width = 48, height = 48, imageCounter = 0;
+	private boolean defaultSubdivision, subdivision;
+	private double trainPercentage, validationPercentage, testPercentage;
+	private File trainingDirectory = null, validationDirectory = null, testDirectory = null;
 	
-	public Fer2013Classifier(MainController controller, String inputFile, String outputDirectory, boolean histogramEqualization, boolean subdivide) 
+	public Fer2013Classifier(MainController controller, String inputFile, String outputDirectory, boolean histogramEqualization, boolean defaultSubdivision, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage)
 	{
-		super(controller, inputFile, outputDirectory, histogramEqualization);
-		this.subdivide = subdivide;
+		super(controller, inputFile, outputDirectory, false, histogramEqualization);
+		this.defaultSubdivision = defaultSubdivision;
+		this.subdivision = subdivision;
+		this.trainPercentage = trainPercentage;
+		this.validationPercentage = validationPercentage;
+		this.testPercentage = testPercentage;
 	}
 
 	@Override
@@ -36,7 +40,7 @@ public class Fer2013Classifier extends Classifier implements Runnable
 		File outputDir = null;
 		
 		// Case of subdivision of the photos between training, validation and test dataset.
-		if (subdivide == true) 
+		if (defaultSubdivision == true) 
 		{
 			Platform.runLater(() ->	controller.setPhaseLabel("Phase 1: classification and subdivision..."));
 			// Creation of training, validation and test folders.
@@ -62,7 +66,7 @@ public class Fer2013Classifier extends Classifier implements Runnable
 			test3 = CreateClassificationSubfolders(testDirectory);
 			if ((!test1) || (!test2) || (!test3)) 
 			{
-		    	ExceptionManager("There was a problem while creating classification folders.\n", false);
+		    	ExceptionManager("There was a problem while creating classification folders.\n");
 		    	return;
 			}
 		}
@@ -74,7 +78,7 @@ public class Fer2013Classifier extends Classifier implements Runnable
 			// Creation of classification folders for the FER2013 database.
 			if (!CreateClassificationSubfolders(outputDir))
 			{
-		    	ExceptionManager("There was a problem while creating classification folders.\n", true);
+		    	ExceptionManager("There was a problem while creating classification folders.\n");
 		    	return;
 			}
 		}
@@ -94,7 +98,7 @@ public class Fer2013Classifier extends Classifier implements Runnable
 				String[] secondSplit = firstSplit[1].split(" ");
 				// Image size control: must be 48 * 48.
 				int size = secondSplit.length;
-				if (size == width * height) 
+				if (size == width*height) 
 				{
 					// Photo creation phase.
 					Mat image = Mat.eye(width, height, CvType.CV_8UC1);
@@ -111,7 +115,7 @@ public class Fer2013Classifier extends Classifier implements Runnable
 						Imgproc.equalizeHist(image, image);
 					}
 					// Saving the photo.
-					if (subdivide == true) 
+					if (defaultSubdivision == true) 
 					{
 						// Training case.
 						if (firstSplit[2].equals("Training")) 
@@ -139,7 +143,7 @@ public class Fer2013Classifier extends Classifier implements Runnable
 				} 
 				else 
 				{
-			    	ExceptionManager("Images have a different size than expected.", true);
+			    	ExceptionManager("Images have a different size than expected.");
 			    	return;
 				}
 				// Increase the count of the number of photos classified (or, if not classified, of the analyzed photos).
@@ -148,19 +152,32 @@ public class Fer2013Classifier extends Classifier implements Runnable
 				percentage = (double) classified / (double) 35887;
 				// Calculation of the percentage of completion of the current operation and update of the classification progress bar.
 				UpdateBar();
-			}			
-			
+			}		
+			// If subdivision is active, the images will be divided between training, validation and test.
+			if((subdivision)&&(!Thread.currentThread().isInterrupted()))
+			{
+				try 
+				{
+					Platform.runLater(() -> controller.setPhaseLabel("Phase 2: subdivision between training, validation and test folder..."));
+					this.SubdivideImages(trainPercentage, validationPercentage, testPercentage);
+				} 
+				catch (SecurityException | IOException e) 
+				{
+					ExceptionManager("An error occurred during the subdivision.");
+					return;
+				}
+			}
 			if (Thread.currentThread().isInterrupted()) 
 			{
-				// Elimination of classification folders.
-				DeleteFolders();
+				// Elimination of all directories.
+				DeleteAllDirectories();
 				Platform.runLater(() -> controller.ShowAttentionDialog("Classification interrupted.\n"));
 			}		
 			Platform.runLater(() -> controller.StartStopClassification(false, false));
 		} 
 		catch (IOException e) 
 		{
-	    	ExceptionManager("There was a problem while trying to read the fer2013.csv file.", true);
+	    	ExceptionManager("There was a problem while trying to read the fer2013.csv file.");
 	    	return;
 		} 
 		finally 
@@ -172,7 +189,7 @@ public class Fer2013Classifier extends Classifier implements Runnable
 			} 
 			catch (IOException e) 
 			{
-		    	ExceptionManager("There was a problem while closing the reading stream from the fer2013.csv file.", true);
+		    	ExceptionManager("There was a problem while closing the reading stream from the fer2013.csv file.");
 		    	return;
 			}
 		}
@@ -227,39 +244,5 @@ public class Fer2013Classifier extends Classifier implements Runnable
 		}
 		// Increment of the total number of images counter.
 		imageCounter++;
-	}
-	
-	/* Method for eliminating the classification directories. */
-	private void DeleteFolders()
-	{
-		try 
-		{
-			if(subdivide==true)
-			{
-				FileUtils.deleteDirectory(trainingDirectory);
-				FileUtils.deleteDirectory(validationDirectory);
-				FileUtils.deleteDirectory(testDirectory);
-			}
-			else
-			{
-				DeleteClassificationFolders();
-			}
-		} 
-		catch (IOException e) 
-		{
-			Platform.runLater(() -> {controller.ShowErrorDialog(e.getMessage());
-				controller.StartStopClassification(false, true);});
-		}
-	}
-	
-	/* Exception handling method. */
-	private void ExceptionManager(String message, boolean deleteClassificationFolders)
-	{
-		if(deleteClassificationFolders)
-		{
-			DeleteFolders();
-		}
-    	Platform.runLater(() -> {controller.ShowErrorDialog(message);
-			controller.StartStopClassification(false, true);});
 	}
 }

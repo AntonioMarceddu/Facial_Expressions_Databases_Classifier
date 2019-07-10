@@ -5,7 +5,7 @@
 	Screenshot of the Facial Expression Database Classifier program.
 </p>
 
-Description available in english and italian below. The license is at the bottom of the page.
+Description available in english and italian below. License is at the bottom of page.
 
 ## English
 
@@ -17,8 +17,8 @@ Facial Expression Database Classifier (FEDC) is a program able to automatically 
 * Multimedia Understanding Group Database (MUG);
 * Radboud Faces Database (RaFD).
 
-In practice, FEDC exploits the pre-classification implemented by the database creators. In addition to this, FEDC is also able to do several useful operations on the images, in order to simplify the neural network training operations:
-* scaling of the horizontal and vertical resolutions;
+In practice, FEDC exploits the pre-classification implemented by database creators. In addition to this, FEDC is also able to do several useful operations on images, in order to simplify the neural network training operations:
+* scaling of horizontal and vertical resolutions;
 * conversion in grayscale color space;
 * histogram equalization;
 * face detection to crop the images to face only.
@@ -27,18 +27,22 @@ This allows, for the people who make use of this databases, to minimize the time
 
 ### The FEDC Interface
 FEDC has a clean and essential user interface, consisting of four macro areas:
-* in the left column, it is possible to choose the database to be classified;
-* in the right column, it is possible to select the operations to be performed on the photos: those available have already been mentioned previously;
-* in the lower part of the window, there are the buttons for selecting the input file, the output folder, and for starting and canceling the classification;
+* on the left column, it is possible to choose the database to be classified;
+* on the right column, it is possible to select the operations to be performed on photos: those available have already been mentioned previously;
+* on the lower part of the window, there are buttons for selecting input file, output folder, and for starting and canceling the classification;
 * finally, above the buttons, there is the progress bar, that indicates the progression of the current operation.
 
 It should be noted that:
-* the user must choose a size for the photos to be classified: it must be between 48x48 and 1024x1024 pixels. For the FER2013 database, since the starting images have a 48x48 pixels resolutions, this possibility, alongside to the face cropping feature, is not available;
-* the JAFFE and the FER2013 databases only contain grayscale images;
-* the RaFD database also contains photos taken in profile: the program excels in the recognition of frontal photos and allows recognition to be made even for this type of photo, although it is likely that it will not be able to classify all the photos of this type.
+* user must choose a size for the photos to be classified: it must be between 48x48 and 1024x1024 pixels. For the FER2013 database, since the starting images have a 48x48 pixels resolutions, this possibility, alongside to the face cropping feature, is not available;
+* JAFFE and FER2013 databases only contain grayscale images;
+* RaFD database also contains photos taken in profile: the program excels in the recognition of frontal photos and allows recognition to be made even for this type of photo, although it is likely that it will not be able to classify all the photos of this type.
+
+### Updates
+* 10/05/2019 - Version 1.0.0 released.
+* 10/07/2019 - Version 2.0.0 released: subdivision function between train, validation, and test dataset added; many minor improvements to the code and its readability have also been made;
 
 ### Final Notes
-The images automatically classified with this program can be used, for example, for the creation of a neural network with Keras: using Python with the Scikit-learn library, these images can be subdivided in the training, validation, and test dataset or cross-validated.
+The images automatically classified with this program can be used, for example, for the creation of a neural network with Keras: using Python with the Scikit-learn library, these images can be subdivided in the train, validation, and test dataset or cross-validated.
 
 Access to the databases mentioned above is usually allowed only for research purposes: for more information, refer to the databases sites. FEDC was created by [Antonio Costantino Marceddu](https://www.linkedin.com/in/antonio-marceddu/) resorting to Eclipse, with Java and the addition of the OpenCV framework.
 
@@ -77,8 +81,12 @@ Occorre notare che:
 * i database JAFFE e FER2013 contengono solo immagini in scala di grigi;
 * il database RaFD contiene anche delle foto scattate di profilo: il programma eccelle nel riconoscimento delle foto frontali e consente il riconoscimento anche per questo tipo di foto, anche se è probabile che non sarà in grado di classificare tutte le foto di questo tipo.
 
+### Aggiornamenti
+* 10/05/2019 - Versione 1.0.0 rilasciata.
+* 10/07/2019 - Versione 2.0.0 rilasciata: funzione di suddivisione tra train, validation e test dataset aggiunta; son stati fatti inoltre molti piccoli miglioramenti al codice e alla sua leggibilità.
+
 ### Note Finali
-Le immagini automaticamente classificate con questo programma possono essere utilizzate, ad esempio, per la creazione di una rete neurale con Keras: utilizzando Python con la libreria Scikit-learn, queste immagini possono essere suddivise in training, validation o test dataset o cross-validate.
+Le immagini automaticamente classificate con questo programma possono essere utilizzate, ad esempio, per la creazione di una rete neurale con Keras: utilizzando Python con la libreria Scikit-learn, queste immagini possono essere suddivise in train, validation o test dataset o cross-validate.
 
 L'accesso ai database sopra menzionati è solitamente consentito al solo scopo di ricerca: per ulteriori informazioni, consultare i siti dei database. FEDC è stato creato da [Antonio Costantino Marceddu](https://www.linkedin.com/in/antonio-marceddu/) ricorrendo a Eclipse, con Java e con l'aggiunta del framework OpenCV.
 

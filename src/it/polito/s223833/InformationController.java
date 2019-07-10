@@ -60,7 +60,7 @@ public class InformationController
 				"•	Multimedia Understanding Group Database (MUG);\r\n" + 
 				"•	Radboud Faces Database (RaFD).\r\n\n" + 
 				"In practice, FEDC exploits the pre-classification implemented by the database creators. In addition to this, FEDC is also able to do several useful operations on the images, in order to simplify the neural network training operations:\r\n" + 
-				"•	scaling of the horizontal and vertical resolutions;\r\n" + 
+				"•	scaling of horizontal and vertical resolutions;\r\n" + 
 				"•	conversion in grayscale color space;\r\n" + 
 				"•	histogram equalization;\r\n" + 
 				"•	face detection to crop the images to faces only.\r\n\n" + 
@@ -72,14 +72,14 @@ public class InformationController
 		InformationTextFlow.getChildren().add(text3);
 		
 		Text text6 = new Text("FEDC has a clean and essential user interface, consisting of four macro areas:\r\n" + 
-				"•	in the left column, it is possible to choose the database to be classified;\r\n" + 
-				"•	in the right column, it is possible to select the operations to be performed on the photos: those available have already been mentioned previously;\r\n" + 
-				"•	in the lower part of the window, there are the buttons for selecting the input file, the output folder, and for starting and canceling the classification;\r\n" + 
+				"•	on the left column, it is possible to choose the database to be classified;\r\n" + 
+				"•	on the right column, it is possible to select the operations to be performed on photos: those available have already been mentioned previously;\r\n" + 
+				"•	on the lower part of the window, there are buttons for selecting input file, output folder, and for starting and canceling the classification;\r\n" + 
 				"•	finally, above the buttons, there is the progress bar, that indicates the progression of the current operation.\r\n\n" + 
 				"It should be noted that:\r\n" + 
-				"•	the user must choose a size for the photos to be classified: it must be between 48x48 and 1024x1024 pixels. For the FER2013 database, since the starting images have a 48x48 pixels resolutions, this possibility, alongside to the face cropping feature, is not available;\r\n" + 
-				"•	the JAFFE and the FER2013 databases only contain grayscale images;\r\n" + 
-				"•	the RaFD database also contains photos taken in profile: the program excels in the recognition of frontal photos and allows recognition to be made even for this type of photo, although it is likely that it will not be able to classify all the photos of this type.\r\n\n\n");
+				"•	user must choose a size for the photos to be classified: it must be between 48x48 and 1024x1024 pixels. For the FER2013 database, since the starting images have a 48x48 pixels resolutions, this possibility, alongside to the face cropping feature, is not available;\r\n" + 
+				"•	JAFFE and FER2013 databases only contain grayscale images;\r\n" + 
+				"•	RaFD database also contains photos taken in profile: the program excels in the recognition of frontal photos and allows recognition to be made even for this type of photo, although it is likely that it will not be able to classify all the photos of this type.\r\n\n\n");
 		InformationTextFlow.getChildren().add(text6);
 		
 		Text text7 = new Text("FINAL NOTES\n\n");

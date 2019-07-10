@@ -19,7 +19,7 @@ public class UnzipClass
 	/* Method for decompressing a zip file. */
 	public void Unzip(MainController controller, String zipFile, String destinationDir) throws IOException 
 	{
-		long total=0, uncompressed=0;
+		long total = 0, uncompressed = 0;
 		double percentage = 0, difference = 0;
 		
 		File destDir = new File(destinationDir);
@@ -30,7 +30,7 @@ public class UnzipClass
 
 		// Calculation of the actual files size, without compression.
 		ZipFile zf = new ZipFile(zipFile);
-		Enumeration<? extends ZipEntry> e = zf.entries();
+		Enumeration <? extends ZipEntry> e = zf.entries();
         while (e.hasMoreElements()) 
         {
         	ZipEntry ze = (ZipEntry) e.nextElement();
@@ -66,7 +66,7 @@ public class UnzipClass
 				int read = 0;
 				while ((read = zis.read(bytesToRead)) != -1) 
 				{
-					uncompressed=uncompressed+(long)read;
+					uncompressed = uncompressed + (long)read;
 					bos.write(bytesToRead, 0, read);
 				}
 				bos.close();

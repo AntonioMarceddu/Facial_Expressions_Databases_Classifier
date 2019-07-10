@@ -8,7 +8,6 @@ import java.util.ArrayList;
 
 import javafx.application.Platform;
 
-import org.apache.commons.io.FileUtils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -25,13 +24,18 @@ import it.polito.s223833.utils.UnzipClass;
 public class CKClassifier extends Classifier implements Runnable
 {
 	private String emotionFile;
-	private File contemptDirectory = null;
+	private boolean subdivision;
+	private double trainPercentage, validationPercentage, testPercentage;
 	
-	public CKClassifier(MainController controller, String inputFile, String emotionFile, String outputDirectory, int width, int height, boolean grayscale, boolean histogramEqualization, boolean faceDetection)
+	public CKClassifier(MainController controller, String inputFile, String emotionFile, String outputDirectory, int width, int height, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage)
 	{
-		super(controller, inputFile, outputDirectory, width, height, grayscale, histogramEqualization, faceDetection);
+		super(controller, inputFile, outputDirectory, true, width, height, grayscale, histogramEqualization, faceDetection);
 		absoluteFaceSize = 150;
-		this.emotionFile=emotionFile;
+		this.emotionFile = emotionFile;
+		this.subdivision = subdivision;
+		this.trainPercentage = trainPercentage;
+		this.validationPercentage = validationPercentage;
+		this.testPercentage = testPercentage;
 	}
 	
 	@Override
@@ -48,7 +52,7 @@ public class CKClassifier extends Classifier implements Runnable
 		} 
 		catch (IOException e1) 
 		{
-	    	ExceptionManager("There was an error during the extraction of the CK+ files.", false);
+	    	ExceptionManager("There was an error during the extraction of the CK+ files.");
 	    	return;
 		}
 		
@@ -64,12 +68,10 @@ public class CKClassifier extends Classifier implements Runnable
 			try 
 			{
 				CreateFolders();
-				contemptDirectory = new File(outputDirectory, "Contempt");
-				contemptDirectory.mkdirs();
 			} 
 			catch (SecurityException e) 
 			{
-		    	ExceptionManager("There was a problem while creating classification folders.", false);
+		    	ExceptionManager("There was a problem while creating classification folders.");
 		    	return;
 			}
 			
@@ -81,7 +83,7 @@ public class CKClassifier extends Classifier implements Runnable
 			numberOfExternalFolders = listOfExternalFolders.length;		
 			
 			// Cycle performed for each individual external folder.
-			for (i=0;i<numberOfExternalFolders;i++)
+			for (i = 0; i < numberOfExternalFolders; i++)
 			{
 				File externalFolder = listOfExternalFolders[i];	
 				File[] listOfInternalFolders = externalFolder.listFiles();
@@ -90,12 +92,12 @@ public class CKClassifier extends Classifier implements Runnable
 				// Verifies that the folders start with an S followed by a sequence of three numbers.
 				if(!externalFolder.getName().matches("S[0-9]{3}"))
 				{
-			    	ExceptionManager("The format of the folders in the input file is not the one expected.", true);
+			    	ExceptionManager("The format of the folders in the input file is not the one expected.");
 			    	return;
 				}
 				
-				j=0;
-				neutralTaken=false;
+				j = 0;
+				neutralTaken = false;
 				// Cycle performed for each individual internal folder.
 				while ((j < numberOfInternalFolders) && (!Thread.currentThread().isInterrupted()))
 				{
@@ -105,17 +107,17 @@ public class CKClassifier extends Classifier implements Runnable
 					// Verifies that the folders are composed of a sequence of three numbers.
 					if(!internalFolder.getName().matches("[0-9]{3}"))
 					{
-				    	ExceptionManager("The format of the folders in the input file is not the one expected.", true);
+				    	ExceptionManager("The format of the folders in the input file is not the one expected.");
 				    	return;
 					}
 					
 					// Read the internal file.
-					if (listOfFiles.length>=1)
+					if (listOfFiles.length >= 1)
 					{
 						// Verifies that the filename has the typical form of the CK+ database files.
 						if(!listOfFiles[0].getName().matches("S[0-9]{3}_[0-9]{3}_[0-9]*_[a-z]{7}\\.[a-z]{3}"))
 						{						
-					    	ExceptionManager("The format of the images in the input file is not the one expected.", true);
+					    	ExceptionManager("The format of the images in the input file is not the one expected.");
 					    	return;
 						}
 						
@@ -131,7 +133,7 @@ public class CKClassifier extends Classifier implements Runnable
 							fr.close();
 							
 							// Reconstruction of the file name and checking of its existence.
-							File file = new File(tempDirectory+"\\cohn-kanade-images\\"+externalFolder.getName()+"\\"+internalFolder.getName(), listOfFiles[0].getName().substring(0, (int)listOfFiles[0].getName().length() - 12) + ".png");
+							File file = new File(tempDirectory + "\\cohn-kanade-images\\" + externalFolder.getName() + "\\" + internalFolder.getName(), listOfFiles[0].getName().substring(0, (int)listOfFiles[0].getName().length() - 12) + ".png");
 						    if (file.exists()) 
 						    {
 						    	// Edit, classify and save the photo.
@@ -139,13 +141,13 @@ public class CKClassifier extends Classifier implements Runnable
 						    }
 						    else 
 							{
-						    	ExceptionManager("Images are not in the expected position.", true);
+						    	ExceptionManager("Images are not in the expected position.");
 						    	return;
 							}
 						}		
-						catch(IOException  e)
+						catch(IOException e)
 						{
-					    	ExceptionManager("There was a problem while trying to read an emotion file.", true);
+					    	ExceptionManager("There was a problem while trying to read an emotion file.");
 							return;
 						}
 					}
@@ -153,18 +155,18 @@ public class CKClassifier extends Classifier implements Runnable
 					// A neutral photo is also taken for each subject in the Cohn-Kanade database.
 			    	if(!neutralTaken)
 			    	{
-			    		String fileName=externalFolder.getName()+"_"+internalFolder.getName()+"_00000001.png";
+			    		String fileName = externalFolder.getName() + "_" + internalFolder.getName() + "_00000001.png";
 			    		// Reconstruction of the file name and checking of its existence.
-						File neutralFile = new File(tempDirectory+"\\cohn-kanade-images\\"+externalFolder.getName()+"\\"+internalFolder.getName(), fileName);
+						File neutralFile = new File(tempDirectory + "\\cohn-kanade-images\\" + externalFolder.getName() + "\\" + internalFolder.getName(), fileName);
 					    if (neutralFile.exists()) 
 					    {
 					    	// Edit, classify and save the photo.
 							doOperationsWithFile(neutralFile, "0");
-				    		neutralTaken=true;
+				    		neutralTaken = true;
 					    }
 					    else
 					    {
-					    	ExceptionManager("Images are not in the expected position.", true);
+					    	ExceptionManager("Images are not in the expected position.");
 					    	return;
 					    }
 			    	}	
@@ -172,18 +174,39 @@ public class CKClassifier extends Classifier implements Runnable
 					j++;
 				}
 			}
+			// If subdivision is active, the images will be divided between training, validation and test.
+			if((subdivision)&&(!Thread.currentThread().isInterrupted()))
+			{
+				try 
+				{
+					Platform.runLater(() -> controller.setPhaseLabel("Phase 4: subdivision between training, validation and test folder..."));
+					this.SubdivideImages(trainPercentage, validationPercentage, testPercentage);
+				} 
+				catch (SecurityException | IOException e) 
+				{
+					ExceptionManager("An error occurred during the subdivision.");
+					return;
+				}
+			}
 		}	
 		// If a cancellation request has been made by the user, both temporary and classification folders will be deleted.
 		if (Thread.currentThread().isInterrupted()) 
 		{
-			DeleteFolders(true);	
+			DeleteAllDirectories();	
 			Platform.runLater(() -> controller.ShowAttentionDialog("Classification interrupted.\n"));
 		}	
 		// Otherwise only temporary ones will be deleted.
 		else
 		{
-			Platform.runLater(() -> controller.setPhaseLabel("Phase 4: deleting temporary folders..."));
-			DeleteFolders(false);	
+			if(subdivision)
+			{
+				Platform.runLater(() -> controller.setPhaseLabel("Phase 5: deleting temporary folders..."));
+			}
+			else
+			{
+				Platform.runLater(() -> controller.setPhaseLabel("Phase 4: deleting temporary folders..."));
+			}
+			DeleteTempDirectory();	
 		}	
 		
 		Platform.runLater(() -> controller.StartStopClassification(false, false));
@@ -193,8 +216,7 @@ public class CKClassifier extends Classifier implements Runnable
 	private void doOperationsWithFile(File file, String emotion)
 	{
 		boolean faceFound = true;
-		Mat resizedFace = Mat.zeros(imageSize, CvType.CV_8UC1);
-		Mat image;
+		Mat image, resizedFace = Mat.zeros(imageSize, CvType.CV_8UC1);
 		// Opening the image to be analyzed.
 		if (grayscale) 
 		{
@@ -244,11 +266,11 @@ public class CKClassifier extends Classifier implements Runnable
 
 			Rect[] facesArray = faces.toArray();
 			// If at least one face is detected, the photo will be cropped to the face itself.
-			if(facesArray.length>0)
+			if(facesArray.length > 0)
 			{
-				Rect rectCrop=null;
+				Rect rectCrop = null;
 				// Only the first face will be saved: if an image has more faces, the others are lost.
-				if(facesArray[0].width>facesArray[0].height)
+				if(facesArray[0].width > facesArray[0].height)
 				{
 					rectCrop = new Rect(facesArray[0].x, facesArray[0].y, facesArray[0].width, facesArray[0].width);
 				}
@@ -322,35 +344,5 @@ public class CKClassifier extends Classifier implements Runnable
 		// Calculation of the percentage of completion of the current operation and update of the classification progress bar.
 		percentage = (double) classified / (double) 450; //(327 labeled + 123 neutral)
 		UpdateBar();
-	}
-	
-	/* Method for eliminating temporary directories and, optionally, the classification directories. */
-	private void DeleteFolders(boolean deleteClassificationFolders)
-	{
-		try 
-		{
-			FileUtils.deleteDirectory(new File(tempDirectory));
-			if(deleteClassificationFolders)
-			{
-				DeleteClassificationFolders();
-				if(contemptDirectory!=null)
-				{
-					FileUtils.deleteDirectory(contemptDirectory);
-				}
-			}
-		} 
-		catch (IOException e) 
-		{
-			Platform.runLater(() -> {controller.ShowErrorDialog(e.getMessage());
-				controller.StartStopClassification(false, true);});
-		}
-	}
-	
-	/* Exception handling method. */
-	private void ExceptionManager(String message, boolean deleteClassificationFolders)
-	{
-		DeleteFolders(true);
-    	Platform.runLater(() -> {controller.ShowErrorDialog(message);
-			controller.StartStopClassification(false, true);});
 	}
 }

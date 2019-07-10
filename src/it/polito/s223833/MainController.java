@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -17,6 +19,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -39,7 +42,11 @@ public class MainController
 
 	/* FXML labels. */
 	@FXML
-	private Label ProgressBarIndicator, PhaseLabel;
+	private Label TrainLabel, ValidationLabel, TestLabel, TotalLabel, ProgressBarLabel, PhaseLabel;
+	
+	/* FXML sliders. */
+	@FXML
+	private Slider TrainSlider, ValidationSlider, TestSlider;
 	
 	/* FXML progressbar. */
 	@FXML
@@ -68,6 +75,8 @@ public class MainController
 	public void SetStage(Stage stage) 
 	{
 		primaryStage = stage;	
+		//Implements the sliders functionality.
+		DefineSlidersFunctionality();
 	}
 	
 	/* Public method for opening the window containing the program information. */
@@ -98,6 +107,14 @@ public class MainController
 			ShowErrorDialog("An error occurred while opening the information window.");
 		}
 	}
+	
+	/* Public method for enabling or disabling the sliders. */
+	public void EnableOrDisableSubdivisionSliders() 
+	{
+		TrainSlider.setDisable(!TrainSlider.isDisable()); 
+		ValidationSlider.setDisable(!ValidationSlider.isDisable()); 
+		TestSlider.setDisable(!TestSlider.isDisable()); 
+	}
 
 	/* Public method called by the "Choose Input File" button. */
 	public void ChooseInputFile() 
@@ -106,7 +123,7 @@ public class MainController
 		if (CKRadioButton.isSelected()) 
 		{
 			// Selection of the extended-cohn-kanade-images.zip file.
-			showInformationDialog("For the CK+ database classification, you must choose the file containing the database images (extended-cohn-kanade-images.zip) and the file containing the emotion labels (Emotion_labels.zip).");
+			showInformationDialog("For the CK+ database classification, you must choose the file containing the database images (extended-cohn-kanade-images.zip) and the file containing the emotions labels (Emotion_labels.zip).");
 			FileChooser fileChooser = new FileChooser();
 			fileChooser.setTitle("Choose CK+ images file");
 			fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -236,7 +253,7 @@ public class MainController
 				// Verifies that the output folder is empty.
 				if (outputDir.list().length == 0) 
 				{
-					// Verifies that the user has chosen the width and height values ​​for the output photos.
+					// Verifies that the user has chosen the width and height values for the output photos.
 					if ((!WidthTextField.getText().isEmpty()) && (!HeightTextField.getText().isEmpty())) 
 					{
 						int width = 0, height = 0;
@@ -250,7 +267,7 @@ public class MainController
 							ShowErrorDialog("The width and the height must be integers.");
 							return;
 						}
-						// Verifies that the width and height values ​​entered are between 48 and 1024.
+						// Verifies that the width and height values entered are between 48 and 1024.
 						if (width >= 48 && width <= 1024 && height >= 48 && height <= 1024) 
 						{
 							boolean classify = false;
@@ -265,7 +282,7 @@ public class MainController
 									// Verifies that the file containing the emotion labels exists.
 									if (emotionFileTest.exists()) 
 									{
-										CKClassifier classifier = new CKClassifier(this, inputFile, emotionFile, outputDirectory, width, height, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected());
+										CKClassifier classifier = new CKClassifier(this, inputFile, emotionFile, outputDirectory, width, height, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 										classifierThread = new Thread(classifier);
 										classify = true;
 									} 
@@ -285,6 +302,7 @@ public class MainController
 								// Verifies that the user has chosen the correct files previously.
 								if (inputFile.contains("fer2013.csv")) 
 								{
+									Fer2013Classifier classifier = null;
 									if (GrayscaleCheckBox.isSelected()) 
 									{
 										ShowAttentionDialog("The FER2013 Database is already a grayscale database: grayscale option will be ignored.");
@@ -297,27 +315,32 @@ public class MainController
 									{
 										ShowAttentionDialog("The FER2013 Database has very low quality images (48x48): width and height will be set to 48.");
 									}
-									Alert alert = new Alert(AlertType.CONFIRMATION);
-									alert.setTitle("Facial Expression Database Classificator");
-									alert.setHeaderText("Request");
-									alert.setContentText("The FER2013 has a field for an automatic subdivision of images between training, validation and test datasets. Do you want to use it to split images in this way?");
-									((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText("Yes");
-									((Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("No");
-
-									Optional<ButtonType> option = alert.showAndWait();
-
-									if (option.get() == ButtonType.OK) 
+									if(EnableSubdivisionCheckBox.isSelected())
 									{
-										Fer2013Classifier classifier = new Fer2013Classifier(this, inputFile, outputDirectory, HistogramEqualizationCheckBox.isSelected(), true);
-										classifierThread = new Thread(classifier);
-										classify = true;
-									} 
-									else if (option.get() == ButtonType.CANCEL) 
-									{
-										Fer2013Classifier classifier = new Fer2013Classifier(this, inputFile, outputDirectory, HistogramEqualizationCheckBox.isSelected(), false);
-										classifierThread = new Thread(classifier);
-										classify = true;
+										classifier = new Fer2013Classifier(this, inputFile, outputDirectory, HistogramEqualizationCheckBox.isSelected(), false, true, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);							
 									}
+									else
+									{
+										Alert alert = new Alert(AlertType.CONFIRMATION);
+										alert.setTitle("Facial Expression Database Classificator");
+										alert.setHeaderText("Request");
+										alert.setContentText("The FER2013 has a field for an automatic subdivision of images between training, validation and test datasets. Do you want to use it to split images in this way?");
+										((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText("Yes");
+										((Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("No");
+
+										Optional<ButtonType> option = alert.showAndWait();
+
+										if (option.get() == ButtonType.OK) 
+										{
+											classifier = new Fer2013Classifier(this, inputFile, outputDirectory, HistogramEqualizationCheckBox.isSelected(), true, false, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+										} 
+										else
+										{
+											classifier = new Fer2013Classifier(this, inputFile, outputDirectory, HistogramEqualizationCheckBox.isSelected(), false, false, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+										}
+									}		
+									classifierThread = new Thread(classifier);
+									classify = true;
 								} 
 								else
 								{
@@ -334,7 +357,7 @@ public class MainController
 									{
 										ShowAttentionDialog("The JAFFE Database is already a grayscale database: grayscale option will be ignored.");
 									}
-									JAFFEClassifier classifier = new JAFFEClassifier(this, inputFile, outputDirectory, width, height, HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected());
+									JAFFEClassifier classifier = new JAFFEClassifier(this, inputFile, outputDirectory, width, height, HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 									classifierThread = new Thread(classifier);
 									classify = true;
 								} 
@@ -349,7 +372,7 @@ public class MainController
 								// Verifies that the user has chosen the correct files previously.
 								if (inputFile.contains("manual.tar")) 
 								{
-									MUGClassifier classifier = new MUGClassifier(this, inputFile, outputDirectory, width, height, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected());
+									MUGClassifier classifier = new MUGClassifier(this, inputFile, outputDirectory, width, height, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100 , TestSlider.getValue() / (double) 100);
 									classifierThread = new Thread(classifier);
 									classify = true;
 								} 
@@ -364,7 +387,8 @@ public class MainController
 								// Verifies that the user has chosen the correct files previously.
 								if (inputFile.contains("RafDDownload-")) 
 								{
-									if(FaceDetectionCheckBox.isSelected())
+									RaFDClassifier classifier = null;
+									if (FaceDetectionCheckBox.isSelected())
 									{
 										Alert alert = new Alert(AlertType.CONFIRMATION);
 										alert.setTitle("Facial Expression Database Classificator");
@@ -377,23 +401,19 @@ public class MainController
 
 										if (option.get() == ButtonType.OK) 
 										{
-											RaFDClassifier classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, GrayscaleCheckBox.isSelected(),	HistogramEqualizationCheckBox.isSelected(),	FaceDetectionCheckBox.isSelected(), true);
-											classifierThread = new Thread(classifier);
-											classify = true;
+											classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, GrayscaleCheckBox.isSelected(),	HistogramEqualizationCheckBox.isSelected(),	FaceDetectionCheckBox.isSelected(), true, EnableSubdivisionCheckBox.isSelected(), TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 										} 
-										else if (option.get() == ButtonType.CANCEL)
+										else
 										{
-											RaFDClassifier classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), false);
-											classifierThread = new Thread(classifier);
-											classify = true;
+											classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), false, EnableSubdivisionCheckBox.isSelected(), TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 										}
 									}
 									else
 									{
-										RaFDClassifier classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), false);
-										classifierThread = new Thread(classifier);
-										classify = true;
-									}									
+										classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), false, EnableSubdivisionCheckBox.isSelected(), TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+									}		
+									classifierThread = new Thread(classifier);
+									classify = true;
 								} 
 								else 
 								{
@@ -438,11 +458,11 @@ public class MainController
 	{
 		// Clearing the classification progress bar.
 		updateProgressBar(0);
-		ProgressBarIndicator.setText("0%");
+		ProgressBarLabel.setText("0%");
 		// Cross enabling-disabling the classification button and the early termination button of the classification.
 		ClassifyButton.setDisable(value);
 		AbortClassificationButton.setDisable(!value);
-		if(error)
+		if (error)
 		{
 			setPhaseLabel("Error!");
 		} 
@@ -458,7 +478,7 @@ public class MainController
 		if (value <= 1) 
 		{
 			ProgressBar.setProgress(value);
-			ProgressBarIndicator.setText(String.format("%.0f", value * 100) + "%");
+			ProgressBarLabel.setText(String.format("%.0f", value * 100) + "%");
 		}
 	}
 
@@ -497,5 +517,61 @@ public class MainController
 		alert.setHeaderText("Error");
 		alert.setContentText(message);
 		alert.showAndWait();
+	}
+	
+	/* Private method for defining the sliders functionality. */
+	private void DefineSlidersFunctionality()
+	{
+		TrainSlider.valueProperty().addListener(new ChangeListener<Number>() 
+		{
+            public void changed(ObservableValue<? extends Number> ov, Number oldVal, Number newVal) 
+            {
+            	TrainLabel.setText(newVal.intValue() + "%");
+            	int total = newVal.intValue() + (int)ValidationSlider.getValue() + (int)TestSlider.getValue();
+            	int diff = 100 - total, validationVal = (int) ValidationSlider.getValue();
+        		if(validationVal > 1)
+            	{
+            		ValidationSlider.setValue(ValidationSlider.getValue() + diff);
+            	}
+            	else
+            	{
+            		TestSlider.setValue(TestSlider.getValue() + diff);
+            	} 
+            }
+      	});
+		ValidationSlider.valueProperty().addListener(new ChangeListener<Number>() 
+		{
+            public void changed(ObservableValue<? extends Number> ov, Number oldVal, Number newVal) 
+            {
+            	ValidationLabel.setText(newVal.intValue() + "%");
+            	int total = newVal.intValue() + (int) TrainSlider.getValue() + (int) TestSlider.getValue();
+    			int diff = 100 - total, testVal = (int) TestSlider.getValue();
+    			if (testVal > 1)
+            	{
+            		TestSlider.setValue(TestSlider.getValue() + diff);
+            	}
+            	else
+            	{
+            		TrainSlider.setValue(TrainSlider.getValue() + diff);
+            	}             	
+            }
+      	});
+		TestSlider.valueProperty().addListener(new ChangeListener<Number>() 
+		{
+            public void changed(ObservableValue<? extends Number> ov, Number oldVal, Number newVal) 
+            {
+            	TestLabel.setText(newVal.intValue() + "%");
+            	int total = newVal.intValue() + (int)TrainSlider.getValue() + (int)ValidationSlider.getValue();
+    			int diff = 100 - total, trainingVal = (int) TrainSlider.getValue();
+    			if (trainingVal > 1)
+            	{
+    				TrainSlider.setValue(TrainSlider.getValue() + diff);
+            	}
+            	else
+            	{
+            		ValidationSlider.setValue(ValidationSlider.getValue() + diff);
+            	}  
+            }
+      	});
 	}
 }
