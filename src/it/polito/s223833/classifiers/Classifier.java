@@ -2,13 +2,21 @@ package it.polito.s223833.classifiers;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Random;
 
 import javafx.application.Platform;
 
 import org.apache.commons.io.FileUtils;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfRect;
+import org.opencv.core.Rect;
 import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
+import org.opencv.objdetect.Objdetect;
 
 import it.polito.s223833.MainController;
 
@@ -17,44 +25,58 @@ public class Classifier
 	protected MainController controller;
 	protected CascadeClassifier frontalFaceCascade;
 	protected Size imageSize;
-	protected String haarclassifierpath, inputFile, outputDirectory, tempDirectory; 
-	protected int absoluteFaceSize = 100, classified = 0;
-	protected boolean contemptState, grayscale, histogramEqualization, faceDetection;	
-	protected double percentage = 0, difference = 0;
+	protected String haarclassifierpath, inputFile, outputDirectory, tempDirectory;
+	protected int format = 0, absoluteFaceSize = 100, classified = 0;
+	protected boolean contemptState = false, surpriseState = false, grayscale = false, histogramEqualization = false, faceDetection = false, faceFound = true, subdivision = false;
+	protected double percentage = 0, difference = 0, trainPercentage = 0, validationPercentage = 0, testPercentage = 0;
 	protected File angerDirectory = null, contemptDirectory = null, disgustDirectory = null, fearDirectory = null, happinessDirectory = null, neutralityDirectory = null, sadnessDirectory = null, surpriseDirectory = null;
 
-	Classifier(MainController controller, String inputFile, String outputDirectory, boolean contemptState, boolean histogramEqualization)
+	/* Constructor for all database, except for Fer2013. */
+	Classifier(MainController controller, String inputFile, String outputDirectory, boolean contemptState, boolean surpriseState, int width, int height, int format, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
 		this.controller = controller;
 		this.inputFile = inputFile;
 		this.outputDirectory = outputDirectory;
 		this.contemptState = contemptState;
-		this.histogramEqualization = histogramEqualization;
-	}
-	
-	Classifier(MainController controller, String inputFile, String outputDirectory, boolean contemptState, int width, int height, boolean grayscale, boolean histogramEqualization, boolean faceDetection)
-	{
-		this.controller = controller;
-		this.inputFile = inputFile;
-		this.outputDirectory = outputDirectory;
-		this.contemptState = contemptState;
+		this.surpriseState = surpriseState;
+		this.format = format;
 		this.grayscale = grayscale;
 		this.histogramEqualization = histogramEqualization;
 		this.faceDetection = faceDetection;
+		this.subdivision = subdivision;
+		this.trainPercentage = trainPercentage;
+		this.validationPercentage = validationPercentage;
+		this.testPercentage = testPercentage;
 
 		tempDirectory = outputDirectory + "\\temp\\";
-		
+
 		// Instancing of the variable containing the dimensions of the target image.
 		imageSize = new Size(width, height);
 		// Instancing of the CascadeClassifier.
 		haarclassifierpath = System.getProperty("user.dir") + "\\lib\\";
 		frontalFaceCascade = new CascadeClassifier(haarclassifierpath + "haarcascade_frontalface_alt.xml");
 	}
-	
-	/* Method for updating the progress bar. */
-	protected void UpdateBar()
+
+	/* Constructor for Fer2013. */
+	Classifier(MainController controller, String inputFile, String outputDirectory, int format, boolean histogramEqualization, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
-		if(percentage-difference >= 0.01) 
+		this.controller = controller;
+		this.inputFile = inputFile;
+		this.outputDirectory = outputDirectory;
+		this.format = format;
+		this.histogramEqualization = histogramEqualization;
+		this.subdivision = subdivision;
+		this.trainPercentage = trainPercentage;
+		this.validationPercentage = validationPercentage;
+		this.testPercentage = testPercentage;
+
+		surpriseState = true;
+	}
+
+	/* Method for updating the progress bar. */
+	protected void UpdateBar() 
+	{
+		if (percentage - difference >= 0.01) 
 		{
 			difference = difference + (double) 0.01;
 			difference = Math.round(difference * 100);
@@ -62,82 +84,164 @@ public class Classifier
 
 			final double value = percentage;
 			Platform.runLater(() -> controller.updateProgressBar(value));
-		}	
+		}
 	}
-	
+
 	/* Method to update the progress bar by setting the value directly. */
-	private void UpdateBar(double value)
+	private void UpdateBar(double value) 
 	{
 		final double val = value;
 		Platform.runLater(() -> controller.updateProgressBar(val));
 	}
-	
-	/* Method for creating classification folders in the output directory. */
-	protected void CreateFolders() throws SecurityException
+
+	/* Method to retrieve the file name excluding the format. */
+	private String GetFileName(String fileName) 
 	{
-		angerDirectory = new File(outputDirectory, "Anger");
-		angerDirectory.mkdirs();
-		if(contemptState)
+		if (fileName.contains(".")) 
 		{
-			contemptDirectory = new File(outputDirectory, "Contempt");
-			contemptDirectory.mkdirs();
+			return fileName.substring(0, fileName.lastIndexOf('.'));
 		}
-		disgustDirectory = new File(outputDirectory, "Disgust");
-		disgustDirectory.mkdirs();
-		fearDirectory = new File(outputDirectory, "Fear");
-		fearDirectory.mkdirs();
-		happinessDirectory = new File(outputDirectory, "Happiness");
-		happinessDirectory.mkdirs();
-		neutralityDirectory = new File(outputDirectory, "Neutrality");
-		neutralityDirectory.mkdirs();
-		sadnessDirectory = new File(outputDirectory, "Sadness");
-		sadnessDirectory.mkdirs();
-		surpriseDirectory = new File(outputDirectory, "Surprise");
-		surpriseDirectory.mkdirs();	
+		return fileName;
 	}
-	
-	/* Method for creating classification folders in the specified directory. */
-	protected void CreateFoldersWithParameter(File directory) throws SecurityException
+
+	/* Method to save images in the chosen format. */
+	protected void SaveImageInTheChosenFormat(String path, String fileName, Mat image) 
 	{
-		angerDirectory = new File(directory, "Anger");
-		angerDirectory.mkdirs();
-		if(contemptState)
+		// Original format.
+		if (format == 0) 
 		{
-			contemptDirectory = new File(directory, "Contempt");
-			contemptDirectory.mkdirs();
+			Imgcodecs.imwrite(path + "\\" + fileName, image);
 		}
-		disgustDirectory = new File(directory, "Disgust");
-		disgustDirectory.mkdirs();
-		fearDirectory = new File(directory, "Fear");
-		fearDirectory.mkdirs();
-		happinessDirectory = new File(directory, "Happiness");
-		happinessDirectory.mkdirs();
-		neutralityDirectory = new File(directory, "Neutrality");
-		neutralityDirectory.mkdirs();
-		sadnessDirectory = new File(directory, "Sadness");
-		sadnessDirectory.mkdirs();
-		surpriseDirectory = new File(directory, "Surprise");
-		surpriseDirectory.mkdirs();	
+		// BMP.
+		else if (format == 1) 
+		{
+			Imgcodecs.imwrite(path + "\\" + GetFileName(fileName) + ".bmp", image);
+		}
+		// JPEG.
+		else if (format == 2) 
+		{
+			Imgcodecs.imwrite(path + "\\" + GetFileName(fileName) + ".jpg", image);
+		}
+		// JPEG 2000.
+		else if (format == 3) 
+		{
+			Imgcodecs.imwrite(path + "\\" + GetFileName(fileName) + ".jp2", image);
+		}
+		// PNG.
+		else if (format == 4) 
+		{
+			Imgcodecs.imwrite(path + "\\" + GetFileName(fileName) + ".png", image);
+		}
+		// TIFF.
+		else if (format == 5) 
+		{
+			Imgcodecs.imwrite(path + "\\" + GetFileName(fileName) + ".tiff", image);
+		}
 	}
-	
-	/* Method for creating classification folders in the specified directory and without assigning a reference to any variable. */
-	protected void CreateFoldersWithParameterAndWithoutInitialization(File directory) throws SecurityException
+
+	/* Method for creating classification directories in the output directory. */
+	protected boolean CreateDirectories() 
 	{
-		new File(directory, "Anger").mkdirs();
-		if(contemptState)
+		try 
 		{
-			new File(directory, "Contempt").mkdirs();
+			angerDirectory = new File(outputDirectory, "Anger");
+			angerDirectory.mkdirs();
+			if (contemptState) 
+			{
+				contemptDirectory = new File(outputDirectory, "Contempt");
+				contemptDirectory.mkdirs();
+			}
+			disgustDirectory = new File(outputDirectory, "Disgust");
+			disgustDirectory.mkdirs();
+			fearDirectory = new File(outputDirectory, "Fear");
+			fearDirectory.mkdirs();
+			happinessDirectory = new File(outputDirectory, "Happiness");
+			happinessDirectory.mkdirs();
+			neutralityDirectory = new File(outputDirectory, "Neutrality");
+			neutralityDirectory.mkdirs();
+			sadnessDirectory = new File(outputDirectory, "Sadness");
+			sadnessDirectory.mkdirs();
+			if (surpriseState) 
+			{
+				surpriseDirectory = new File(outputDirectory, "Surprise");
+				surpriseDirectory.mkdirs();
+			}
+
+			return true;
+		} 
+		catch (SecurityException e) 
+		{
+			ExceptionManager("There was a problem while creating classification folders.");
+			return false;
 		}
-		new File(directory, "Disgust").mkdirs();
-		new File(directory, "Fear").mkdirs();
-		new File(directory, "Happiness").mkdirs();
-		new File(directory, "Neutrality").mkdirs();
-		new File(directory, "Sadness").mkdirs();
-		new File(directory, "Surprise").mkdirs();
 	}
-	
-	/* Method for eliminating the temporary directory. */
-	protected void DeleteTempDirectory()
+
+	/* Method for creating classification directories in the specified directory. */
+	protected boolean CreateDirectoriesWithParameter(File directory) 
+	{
+		try 
+		{
+			angerDirectory = new File(directory, "Anger");
+			angerDirectory.mkdirs();
+			if (contemptState) 
+			{
+				contemptDirectory = new File(directory, "Contempt");
+				contemptDirectory.mkdirs();
+			}
+			disgustDirectory = new File(directory, "Disgust");
+			disgustDirectory.mkdirs();
+			fearDirectory = new File(directory, "Fear");
+			fearDirectory.mkdirs();
+			happinessDirectory = new File(directory, "Happiness");
+			happinessDirectory.mkdirs();
+			neutralityDirectory = new File(directory, "Neutrality");
+			neutralityDirectory.mkdirs();
+			sadnessDirectory = new File(directory, "Sadness");
+			sadnessDirectory.mkdirs();
+			if (surpriseState) 
+			{
+				surpriseDirectory = new File(directory, "Surprise");
+				surpriseDirectory.mkdirs();
+			}
+			return true;
+		} 
+		catch (SecurityException e) 
+		{
+			ExceptionManager("There was a problem while creating classification folders.");
+			return false;
+		}
+	}
+
+	/* Method for creating classification directories in the specified directory and without assigning a reference to any variable. */
+	protected boolean CreateDirectoriesWithParameterAndWithoutInitialization(File directory) 
+	{
+		try 
+		{
+			new File(directory, "Anger").mkdirs();
+			if (contemptState) 
+			{
+				new File(directory, "Contempt").mkdirs();
+			}
+			new File(directory, "Disgust").mkdirs();
+			new File(directory, "Fear").mkdirs();
+			new File(directory, "Happiness").mkdirs();
+			new File(directory, "Neutrality").mkdirs();
+			new File(directory, "Sadness").mkdirs();
+			if (surpriseState) 
+			{
+				new File(directory, "Surprise").mkdirs();
+			}
+			return true;
+		} 
+		catch (SecurityException e) 
+		{
+			ExceptionManager("There was a problem while creating classification directories.");
+			return false;
+		}
+	}
+
+	/* Method to delete the temporary directory. */
+	protected void DeleteTempDirectory() 
 	{
 		try 
 		{
@@ -145,13 +249,57 @@ public class Classifier
 		} 
 		catch (IOException e) 
 		{
-			Platform.runLater(() -> {controller.ShowErrorDialog(e.getMessage());
+			Platform.runLater(() -> {controller.ShowErrorDialog("An error occurred while deleting temporary directories.");
 				controller.StartStopClassification(false, true);});
 		}
 	}
-	
-	/* Method for eliminating all directories. */
-	protected void DeleteAllDirectories()
+
+	/* Method to delete the classification directories. */
+	protected void DeleteClassificationDirectories() 
+	{
+		try 
+		{
+			if (angerDirectory != null) 
+			{
+				FileUtils.deleteDirectory(angerDirectory);
+			}
+			if (contemptState == true && contemptDirectory != null) 
+			{
+				FileUtils.deleteDirectory(contemptDirectory);
+			}
+			if (disgustDirectory != null) 
+			{
+				FileUtils.deleteDirectory(disgustDirectory);
+			}
+			if (fearDirectory != null) 
+			{
+				FileUtils.deleteDirectory(fearDirectory);
+			}
+			if (happinessDirectory != null) 
+			{
+				FileUtils.deleteDirectory(happinessDirectory);
+			}
+			if (neutralityDirectory != null) 
+			{
+				FileUtils.deleteDirectory(neutralityDirectory);
+			}
+			if (sadnessDirectory != null) 
+			{
+				FileUtils.deleteDirectory(sadnessDirectory);
+			}
+			if (surpriseState == true && surpriseDirectory != null) 
+			{
+				FileUtils.deleteDirectory(surpriseDirectory);
+			}
+		} 
+		catch (IOException e) 
+		{
+			ExceptionManager("An error occurred while deleting the classification directories.");
+		}
+	}
+
+	/* Method to delete all directories. */
+	protected void DeleteAllDirectories() 
 	{
 		try 
 		{
@@ -159,185 +307,240 @@ public class Classifier
 		} 
 		catch (IOException e) 
 		{
-			Platform.runLater(() -> {controller.ShowErrorDialog(e.getMessage());
+			Platform.runLater(() -> {controller.ShowErrorDialog("An error occurred while deleting temporary directories.");
 				controller.StartStopClassification(false, true);});
 		}
 	}
-	
+
 	/* Exception handling method. */
-	protected void ExceptionManager(String message)
+	protected void ExceptionManager(String message) 
 	{
 		DeleteAllDirectories();
-    	Platform.runLater(() -> {controller.ShowErrorDialog(message);
+		Platform.runLater(() -> {controller.ShowErrorDialog(message);
 			controller.StartStopClassification(false, true);});
 	}
-	
-	/* Method for deleting the classification folders. */
-	protected void DeleteClassificationFolders() throws IOException
+
+	/* Method to perform the histogram equalization on the image. */
+	protected Mat HistogramEqualization(Mat image) 
 	{
-		if(angerDirectory != null)
+		if (grayscale) 
 		{
-			FileUtils.deleteDirectory(angerDirectory);		
+			Imgproc.equalizeHist(image, image);
+		} 
+		else 
+		{
+			// Subdivision of the image in the three channels b, g and r.
+			ArrayList<Mat> channels = new ArrayList<Mat>();
+			Core.split(image, channels);
+
+			Mat b = new Mat();
+			Mat g = new Mat();
+			Mat r = new Mat();
+
+			// Histogram equalization for each individual channel.
+			Imgproc.equalizeHist(channels.get(0), b);
+			Imgproc.equalizeHist(channels.get(1), g);
+			Imgproc.equalizeHist(channels.get(2), r);
+
+			// Image reconstruction.
+			ArrayList<Mat> normalizedImages = new ArrayList<Mat>();
+			normalizedImages.add(b);
+			normalizedImages.add(g);
+			normalizedImages.add(r);
+			Core.merge(normalizedImages, image);
 		}
-		if(contemptState == true || contemptDirectory != null)
-		{
-			FileUtils.deleteDirectory(contemptDirectory);	
-		}		
-		if(disgustDirectory != null)
-		{
-			FileUtils.deleteDirectory(disgustDirectory);
-		}
-		if(fearDirectory != null)
-		{
-			FileUtils.deleteDirectory(fearDirectory);			
-		}
-		if(happinessDirectory != null)
-		{
-			FileUtils.deleteDirectory(happinessDirectory);			
-		}
-		if(neutralityDirectory != null)
-		{
-			FileUtils.deleteDirectory(neutralityDirectory);		
-		}
-		if(sadnessDirectory != null)
-		{
-			FileUtils.deleteDirectory(sadnessDirectory);
-		}
-		if(surpriseDirectory != null)
-		{
-			FileUtils.deleteDirectory(surpriseDirectory);	
-		}
+		return image;
 	}
-	
-	/* Method to create the training, validation and test folder and to divide the images between them. */
-	protected void SubdivideImages(double trainPerc, double validPerc, double testPerc) throws SecurityException, IOException 
+
+	/* Method to perform face detection on frontal face images. */
+	protected Mat FrontalFaceDetection(Mat image, Mat resizedFace) 
 	{
-		int angerTotalNumber = 0, contemptTotalNumber = 0, disgustTotalNumber = 0, fearTotalNumber = 0, happinessTotalNumber = 0, neutralityTotalNumber = 0, sadnessTotalNumber = 0, surpriseTotalNumber = 0;
-		
-		// Count of the number of files per-directory.
-		angerTotalNumber = countNumberOfFiles(angerDirectory);
-		UpdateBar(0.02);
-		if(contemptState)
+		MatOfRect faces = new MatOfRect();
+		// Verifies the presence of frontal faces through the haar front face classifier.
+		frontalFaceCascade.detectMultiScale(image, faces, 1.1, 2, 0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(absoluteFaceSize, absoluteFaceSize), new Size());
+
+		Rect[] facesArray = faces.toArray();
+		// If at least one face is detected, the photo will be cropped to the face itself.
+		if (facesArray.length > 0) 
 		{
-			contemptTotalNumber = countNumberOfFiles(contemptDirectory);		
-		}
-		disgustTotalNumber = countNumberOfFiles(disgustDirectory);
-		UpdateBar(0.04);
-		fearTotalNumber = countNumberOfFiles(fearDirectory);
-		UpdateBar(0.06);
-		happinessTotalNumber = countNumberOfFiles(happinessDirectory);
-		UpdateBar(0.08);
-		neutralityTotalNumber = countNumberOfFiles(neutralityDirectory);
-		UpdateBar(0.10);
-		sadnessTotalNumber = countNumberOfFiles(sadnessDirectory);
-		UpdateBar(0.12);
-		surpriseTotalNumber = countNumberOfFiles(surpriseDirectory);		
-		UpdateBar(0.14);
-		
-		// Create outer directories.
-		File trainingDirectory, validationDirectory, testDirectory;
-		trainingDirectory = new File(outputDirectory, "Training");
-		trainingDirectory.mkdirs();	
-		UpdateBar(0.16);
-		validationDirectory = new File(outputDirectory, "Validation");
-		validationDirectory.mkdirs();
-		UpdateBar(0.18);
-		testDirectory = new File(outputDirectory, "Test");
-		testDirectory.mkdirs();		
-		UpdateBar(0.2);
-		
-		// Create inner directories for validation and testing.
-		CreateFoldersWithParameterAndWithoutInitialization(validationDirectory);
-		UpdateBar(0.25);
-		CreateFoldersWithParameterAndWithoutInitialization(testDirectory);		
-		UpdateBar(0.3);
-		
-		// Subdivision of a percentage of the images in the validation and test directories.
-		subdivideImages(validationDirectory.getAbsolutePath(), validPerc, angerTotalNumber, contemptTotalNumber, disgustTotalNumber, fearTotalNumber, happinessTotalNumber, neutralityTotalNumber, sadnessTotalNumber, surpriseTotalNumber);
-		UpdateBar(0.6);
-		subdivideImages(testDirectory.getAbsolutePath(), validPerc, angerTotalNumber, contemptTotalNumber, disgustTotalNumber, fearTotalNumber, happinessTotalNumber, neutralityTotalNumber, sadnessTotalNumber, surpriseTotalNumber);
-		UpdateBar(0.9);
-		
-		// Move the remaining folders and images in the training directory.
-		if (!Thread.currentThread().isInterrupted()) 
-		{
-			FileUtils.moveDirectoryToDirectory(angerDirectory, trainingDirectory, true);
-			if(contemptState)
+			Rect rectCrop = null;
+			// Only the first face will be saved: if an image has more faces, the others are
+			// lost.
+			if (facesArray[0].width > facesArray[0].height) 
 			{
-				FileUtils.moveDirectoryToDirectory(contemptDirectory, trainingDirectory, true);	
+				rectCrop = new Rect(facesArray[0].x, facesArray[0].y, facesArray[0].width, facesArray[0].width);
+			} 
+			else 
+			{
+				rectCrop = new Rect(facesArray[0].x, facesArray[0].y, facesArray[0].height, facesArray[0].height);
 			}
-			FileUtils.moveDirectoryToDirectory(disgustDirectory, trainingDirectory, true);
-			FileUtils.moveDirectoryToDirectory(fearDirectory, trainingDirectory, true);
-			FileUtils.moveDirectoryToDirectory(happinessDirectory, trainingDirectory, true);
-			FileUtils.moveDirectoryToDirectory(neutralityDirectory, trainingDirectory, true);
-			FileUtils.moveDirectoryToDirectory(sadnessDirectory, trainingDirectory, true);
-			FileUtils.moveDirectoryToDirectory(surpriseDirectory, trainingDirectory, true);	
-			UpdateBar(1);
+			// The face-only photo will be saved in a new matrix.
+			Mat face = new Mat(image, rectCrop);
+			// Scaling the photo to the desired size.
+			Imgproc.resize(face, resizedFace, imageSize);
+			// Release of the initialized variables.
+			face.release();
+		} 
+		else 
+		{
+			faceFound = false;
+		}
+		// Release of the initialized variables.
+		faces.release();
+		return resizedFace;
+	}
+
+	/* Method to create the training, validation and test folder and to divide the images between them. */
+	protected boolean SubdivideImages(double trainPerc, double validPerc, double testPerc) 
+	{
+		try 
+		{
+			int angerTotalNumber = 0, contemptTotalNumber = 0, disgustTotalNumber = 0, fearTotalNumber = 0, happinessTotalNumber = 0, neutralityTotalNumber = 0, sadnessTotalNumber = 0, surpriseTotalNumber = 0;
+
+			// Count of the number of files per-directory.
+			angerTotalNumber = countNumberOfFiles(angerDirectory);
+			UpdateBar(0.02);
+			if (contemptState) 
+			{
+				contemptTotalNumber = countNumberOfFiles(contemptDirectory);
+			}
+			disgustTotalNumber = countNumberOfFiles(disgustDirectory);
+			UpdateBar(0.04);
+			fearTotalNumber = countNumberOfFiles(fearDirectory);
+			UpdateBar(0.06);
+			happinessTotalNumber = countNumberOfFiles(happinessDirectory);
+			UpdateBar(0.08);
+			neutralityTotalNumber = countNumberOfFiles(neutralityDirectory);
+			UpdateBar(0.10);
+			sadnessTotalNumber = countNumberOfFiles(sadnessDirectory);
+			UpdateBar(0.12);
+			if (surpriseState) 
+			{
+				surpriseTotalNumber = countNumberOfFiles(surpriseDirectory);
+				UpdateBar(0.14);
+			}
+
+			// Create outer directories.
+			File trainingDirectory, validationDirectory, testDirectory;
+			trainingDirectory = new File(outputDirectory, "Training");
+			trainingDirectory.mkdirs();
+			UpdateBar(0.16);
+			validationDirectory = new File(outputDirectory, "Validation");
+			validationDirectory.mkdirs();
+			UpdateBar(0.18);
+			testDirectory = new File(outputDirectory, "Test");
+			testDirectory.mkdirs();
+			UpdateBar(0.2);
+
+			// Create inner directories for validation and testing.
+			if (!CreateDirectoriesWithParameterAndWithoutInitialization(validationDirectory)) 
+			{
+				return false;
+			}
+			UpdateBar(0.25);
+			if (!CreateDirectoriesWithParameterAndWithoutInitialization(testDirectory)) 
+			{
+				return false;
+			}
+			UpdateBar(0.3);
+
+			// Subdivision of a percentage of the images in the validation and test directories.
+			subdivideImages(validationDirectory.getAbsolutePath(), validPerc, angerTotalNumber, contemptTotalNumber, disgustTotalNumber, fearTotalNumber, happinessTotalNumber, neutralityTotalNumber, sadnessTotalNumber, surpriseTotalNumber);
+			UpdateBar(0.6);
+			subdivideImages(testDirectory.getAbsolutePath(), validPerc, angerTotalNumber, contemptTotalNumber, disgustTotalNumber, fearTotalNumber, happinessTotalNumber, neutralityTotalNumber, sadnessTotalNumber, surpriseTotalNumber);
+			UpdateBar(0.9);
+
+			// Move the remaining folders and images in the training directory.
+			if (!Thread.currentThread().isInterrupted()) 
+			{
+				FileUtils.moveDirectoryToDirectory(angerDirectory, trainingDirectory, true);
+				if (contemptState) 
+				{
+					FileUtils.moveDirectoryToDirectory(contemptDirectory, trainingDirectory, true);
+				}
+				FileUtils.moveDirectoryToDirectory(disgustDirectory, trainingDirectory, true);
+				FileUtils.moveDirectoryToDirectory(fearDirectory, trainingDirectory, true);
+				FileUtils.moveDirectoryToDirectory(happinessDirectory, trainingDirectory, true);
+				FileUtils.moveDirectoryToDirectory(neutralityDirectory, trainingDirectory, true);
+				FileUtils.moveDirectoryToDirectory(sadnessDirectory, trainingDirectory, true);
+				if (surpriseState) 
+				{
+					FileUtils.moveDirectoryToDirectory(surpriseDirectory, trainingDirectory, true);
+				}
+				UpdateBar(1);
+			}
+			return true;
+		} 
+		catch (SecurityException | IOException | NullPointerException e) 
+		{
+			ExceptionManager("An error occurred during the subdivision.");
+			return false;
 		}
 	}
-	
+
 	/* Method for counting the number of files in a directory. */
-	private int countNumberOfFiles(File directory)
+	private int countNumberOfFiles(File directory) throws SecurityException 
 	{
 		int count = 0;
 		if (!Thread.currentThread().isInterrupted()) 
 		{
-			for(File file : directory.listFiles())
+			for (File file : directory.listFiles()) 
 			{
-	            if(file.isFile()) 
-	            {
-	            	count++;   
-	            }
+				if (file.isFile()) 
+				{
+					count++;
+				}
 			}
 		}
 		return count;
 	}
-	
-	/* Method for subdividing a percentage of images in the classification directory, for validation or testing. */
-	private void subdivideImages(String destination, double percentage, int angerNumber, int contemptNumber, int disgustNumber, int fearNumber, int happinessNumber, int neutralityNumber, int sadnessNumber, int surpriseNumber) throws IOException
-	{
 
+	/* Method for subdividing a percentage of images in the classification directory, for validation or testing. */
+	private void subdivideImages(String destination, double percentage, int angerNumber, int contemptNumber, int disgustNumber, int fearNumber, int happinessNumber, int neutralityNumber, int sadnessNumber, int surpriseNumber) throws SecurityException, IOException 
+	{
 		takeNImagesRandom(angerDirectory, destination + "\\Anger\\", angerNumber, percentage);
-		if(contemptState)
+		if (contemptState) 
 		{
 			takeNImagesRandom(contemptDirectory, destination + "\\Contempt\\", contemptNumber, percentage);
 		}
 		takeNImagesRandom(disgustDirectory, destination + "\\Disgust\\", disgustNumber, percentage);
 		takeNImagesRandom(fearDirectory, destination + "\\Fear\\", fearNumber, percentage);
 		takeNImagesRandom(happinessDirectory, destination + "\\Happiness\\", happinessNumber, percentage);
-		takeNImagesRandom(neutralityDirectory, destination + "\\Neutrality\\", neutralityNumber, percentage);	
+		takeNImagesRandom(neutralityDirectory, destination + "\\Neutrality\\", neutralityNumber, percentage);
 		takeNImagesRandom(sadnessDirectory, destination + "\\Sadness\\", sadnessNumber, percentage);
-		takeNImagesRandom(surpriseDirectory, destination + "\\Surprise\\", surpriseNumber, percentage);		
+		if (surpriseState) 
+		{
+			takeNImagesRandom(surpriseDirectory, destination + "\\Surprise\\", surpriseNumber, percentage);
+		}
 	}
-	
-	
+
 	/* Method to randomly choose a percentage of images for a subdirectory. */
-	private void takeNImagesRandom(File source, String destination, int totalNumber, double percentage) throws IOException
+	private void takeNImagesRandom(File source, String destination, int totalNumber, double percentage) throws SecurityException, IOException 
 	{
-		if (!Thread.currentThread().isInterrupted())		
+		if (!Thread.currentThread().isInterrupted()) 
 		{
 			Random random = new Random();
 			int number = (int) (totalNumber * percentage), count = 0;
 			boolean flag = false;
-			while(flag == false)
+			while (flag == false) 
 			{
-				for(File file : source.listFiles())
+				for (File file : source.listFiles()) 
 				{
-		            if(file.isFile()) 
-		            {
-		            	if(random.nextFloat() < percentage)
-		            	{
-			            	count++;
-			            	FileUtils.moveFileToDirectory(FileUtils.getFile(file.getAbsolutePath()), FileUtils.getFile(destination), true);
-			            	if(count >= number)
-					        {
-					        	flag = true;
-					        	break;
-					        }
-		            	}           
-		            }
+					if (file.isFile()) 
+					{
+						if (random.nextFloat() < percentage) 
+						{
+							count++;
+							FileUtils.moveFileToDirectory(FileUtils.getFile(file.getAbsolutePath()), FileUtils.getFile(destination), true);
+							if (count >= number) 
+							{
+								flag = true;
+								break;
+							}
+						}
+					}
 				}
-			}		
+			}
 		}
 
 	}

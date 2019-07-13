@@ -12,16 +12,19 @@ Description available in english and italian below. License is at the bottom of 
 ### Facial Expression Database Classifier
 Facial Expression Database Classifier (FEDC) is a program able to automatically classify images of some of the most used databases, depicting posed human faces:
 * Extended Cohn-Kanade Database (CK+);
+* FACES Database;
 * Facial Expression Recognition 2013 Database (FER2013);
 * Japanese Female Facial Expression (JAFFE);
 * Multimedia Understanding Group Database (MUG);
 * Radboud Faces Database (RaFD).
 
 In practice, FEDC exploits the pre-classification implemented by database creators. In addition to this, FEDC is also able to do several useful operations on images, in order to simplify the neural network training operations:
-* scaling of horizontal and vertical resolutions;
+* change image format;
 * conversion in grayscale color space;
 * histogram equalization;
-* face detection to crop the images to face only.
+* face detection to crop the images to face only;
+* scaling of horizontal and vertical resolutions;
+* subdivision in train, validation and test dataset.
 
 This allows, for the people who make use of this databases, to minimize the time necessary for their classification, so that they can dedicate directly to other tasks, such as training of a neural network.
 
@@ -39,10 +42,11 @@ It should be noted that:
 
 ### Updates
 * 10/05/2019 - Version 1.0.0 released.
-* 10/07/2019 - Version 2.0.0 released: subdivision function between train, validation, and test dataset added; many minor improvements to the code and its readability have also been made;
+* 10/07/2019 - Version 2.0.0 released: subdivision function between train, validation, and test dataset has been added; many minor improvements to the code and its readability have also been made.
+* 14/07/2019 - Version 3.0.0 released: the change image format function has been added; support to FACES database has been added; many corrections and improvements to the code and its readability have also been made.
 
 ### Final Notes
-The images automatically classified with this program can be used, for example, for the creation of a neural network with Keras: using Python with the Scikit-learn library, these images can be subdivided in the train, validation, and test dataset or cross-validated.
+The images automatically classified with this program can be used, for example, for the training of a neural network capable of recognizing facial expressions, through the use of Keras or similar frameworks. Since the code of the program is freely usable, it is possible to implement small changes to make the program work even in totally different contexts.
 
 Access to the databases mentioned above is usually allowed only for research purposes: for more information, refer to the databases sites. FEDC was created by [Antonio Costantino Marceddu](https://www.linkedin.com/in/antonio-marceddu/) resorting to Eclipse, with Java and the addition of the OpenCV framework.
 
@@ -56,16 +60,19 @@ Access to the databases mentioned above is usually allowed only for research pur
 ### Facial Expression Database Classifier
 Facial Expression Database Classifier (FEDC) è un programma in grado di classificare automaticamente le immagini di alcuni tra i database utilizzati, raffiguranti volti umani in posa:
 * Extended Cohn-Kanade Database (CK+);
+* FACES Database;
 * Facial Expression Recognition 2013 Database (FER2013);
 * Japanese Female Facial Expression (JAFFE);
 * Multimedia Understanding Group Database (MUG);
 * Radboud Faces Database (RaFD).
 
 Nella pratica, FEDC sfrutta la pre-classificazione implementata dai creatori del database. Oltre a ciò, FEDC è anche in grado di eseguire diverse operazioni utili sulle immagini, al fine di semplificare le operazioni di addestramento della rete neurale:
-* ridimensionamento della risoluzione orizzontale e verticale;
+* cambio del formato dell'immagine;
 * conversione dello spazio dei colori in scala di grigi;
 * equalizzazione dell'istogramma;
-* rilevamento del volto per il ritaglio delle immagini al solo volto.
+* ridimensionamento della risoluzione orizzontale e verticale;
+* rilevamento del volto per il ritaglio delle immagini al solo volto;
+* suddivisione in train, validation e test dataset.
 
 Ciò consente, per le persone che fanno uso di questi database, di ridurre al minimo il tempo necessario per la loro classificazione, in modo che possano dedicarsi direttamente ad altre attività, come l'addestramento di una rete neurale.
 
@@ -84,9 +91,10 @@ Occorre notare che:
 ### Aggiornamenti
 * 10/05/2019 - Versione 1.0.0 rilasciata.
 * 10/07/2019 - Versione 2.0.0 rilasciata: funzione di suddivisione tra train, validation e test dataset aggiunta; son stati fatti inoltre molti piccoli miglioramenti al codice e alla sua leggibilità.
+* 14/07/2019 - Versione 3.0.0 rilasciata: è stata aggiunta la funzione di cambio del formato dell'immagine; è stato aggiunto il supporto al FACES database; sono state inoltre apportate molte correzioni e miglioramenti al codice e alla sua leggibilità.
 
 ### Note Finali
-Le immagini automaticamente classificate con questo programma possono essere utilizzate, ad esempio, per la creazione di una rete neurale con Keras: utilizzando Python con la libreria Scikit-learn, queste immagini possono essere suddivise in train, validation o test dataset o cross-validate.
+Le immagini automaticamente classificate con questo programma possono essere utilizzate, ad esempio, per l'addestramento di una rete neurale in grado di riconoscere le espressioni facciali, attraverso l'uso di Keras o di quadri simili. Essendo il codice del programma liberamente fruibile, è possibile attuare delle piccole modifiche per far si che il programma possa funzionare anche in contesti totalmente differenti.
 
 L'accesso ai database sopra menzionati è solitamente consentito al solo scopo di ricerca: per ulteriori informazioni, consultare i siti dei database. FEDC è stato creato da [Antonio Costantino Marceddu](https://www.linkedin.com/in/antonio-marceddu/) ricorrendo a Eclipse, con Java e con l'aggiunta del framework OpenCV.
 

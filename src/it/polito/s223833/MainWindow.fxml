@@ -14,7 +14,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" minHeight="616.0" minWidth="880.0" prefHeight="616.0" prefWidth="880.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polito.s223833.MainController">
+<VBox alignment="CENTER" prefHeight="675.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polito.s223833.MainController">
    <children>
       <HBox alignment="CENTER_RIGHT">
          <children>
@@ -34,177 +34,242 @@
                         <Font size="14.0" />
                      </font>
                   </Label>
-                  <RadioButton fx:id="CKRadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" selected="true" text="Extended Cohn-Kanade Database (CK+) " textAlignment="CENTER" wrapText="true">
-                     <font>
-                        <Font size="14.0" />
-                     </font>
+                  <RadioButton fx:id="CKRadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" selected="true" style="-fx-alignment: center;" text="Extended Cohn-Kanade Database (CK+) " textAlignment="CENTER" wrapText="true">
                   	<toggleGroup>
                         <ToggleGroup fx:id="Database" />
                      </toggleGroup>
-                  </RadioButton>
-                  <RadioButton fx:id="FER2013RadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" text="Facial Expression Recognition 2013 Database (FER2013)" textAlignment="CENTER" toggleGroup="$Database" wrapText="true">
                      <font>
                         <Font size="14.0" />
                      </font>
                   </RadioButton>
-                  <RadioButton fx:id="JAFFERadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" text="Japanese Female Facial Expression (JAFFE)" textAlignment="CENTER" toggleGroup="$Database" wrapText="true">
+                  <RadioButton fx:id="FACESRadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" style="-fx-alignment: center;" text="FACES Database" textAlignment="CENTER" toggleGroup="$Database" wrapText="true">
                      <font>
                         <Font size="14.0" />
                      </font>
                   </RadioButton>
-                  <RadioButton fx:id="MUGRadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" text="Multimedia Understanding Group Database (MUG) " textAlignment="CENTER" toggleGroup="$Database" wrapText="true">
+                  <RadioButton fx:id="FER2013RadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" style="-fx-alignment: center;" text="Facial Expression Recognition 2013 Database (FER2013)" textAlignment="CENTER" toggleGroup="$Database" wrapText="true">
                      <font>
                         <Font size="14.0" />
                      </font>
                   </RadioButton>
-                  <RadioButton fx:id="RaFDRadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" text="Radboud Faces Database (RaFD)" textAlignment="CENTER" toggleGroup="$Database" wrapText="true">
+                  <RadioButton fx:id="JAFFERadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" style="-fx-alignment: center;" text="Japanese Female Facial Expression (JAFFE)" textAlignment="CENTER" toggleGroup="$Database" wrapText="true">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </RadioButton>
+                  <RadioButton fx:id="MUGRadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" style="-fx-alignment: center;" text="Multimedia Understanding Group Database (MUG) " textAlignment="CENTER" toggleGroup="$Database" wrapText="true">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </RadioButton>
+                  <RadioButton fx:id="RaFDRadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" style="-fx-alignment: center;" text="Radboud Faces Database (RaFD)" textAlignment="CENTER" toggleGroup="$Database" wrapText="true">
                      <font>
                         <Font size="14.0" />
                      </font>
                   </RadioButton>
                </children>
             </VBox>
-            <VBox alignment="CENTER" prefHeight="0.0" prefWidth="60.0">
+            <VBox alignment="CENTER" prefHeight="0.0" prefWidth="40.0">
                <children>
-                  <Separator orientation="VERTICAL" prefHeight="300.0" />
+                  <Separator orientation="VERTICAL" prefHeight="350.0" />
                </children></VBox>
-            <VBox alignment="CENTER">
+            <VBox>
                <children>
-                  <Label fx:id="OptionsLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="60.0" prefWidth="230.0" text="Options:">
+                  <HBox>
+                     <children>
+                        <VBox alignment="CENTER">
+                           <children>
+                              <Label fx:id="OptionsLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="60.0" prefWidth="230.0" text="Options:">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Label>
+                              <CheckBox fx:id="GrayscaleCheckBox" alignment="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" text="Grayscale" textAlignment="CENTER">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </CheckBox>
+                              <CheckBox fx:id="HistogramEqualizationCheckBox" alignment="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" text="Histogram Equalization" textAlignment="CENTER">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </CheckBox>
+                              <CheckBox fx:id="FaceDetectionCheckBox" alignment="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" text="Face Detection and Cut" textAlignment="CENTER">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </CheckBox>
+                              <HBox alignment="CENTER" prefHeight="60.0" prefWidth="230.0">
+                                 <children>
+                                    <Label prefHeight="20.0" prefWidth="50.0" text="Width: ">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                       <HBox.margin>
+                                          <Insets right="10.0" />
+                                       </HBox.margin>
+                                    </Label>
+                                    <TextField fx:id="WidthTextField" promptText="Desired Photo Width:">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                    </TextField>
+                                 </children>
+                              </HBox>
+                              <HBox alignment="CENTER" prefHeight="60.0" prefWidth="230.0">
+                                 <children>
+                                    <Label prefHeight="20.0" prefWidth="50.0" text="Height:">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                       <HBox.margin>
+                                          <Insets right="10.0" />
+                                       </HBox.margin>
+                                    </Label>
+                                    <TextField fx:id="HeightTextField" promptText="Desired Photo Height:">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                    </TextField>
+                                 </children>
+                                 <VBox.margin>
+                                    <Insets />
+                                 </VBox.margin>
+                              </HBox>
+                           </children>
+                        </VBox>
+                        <VBox alignment="CENTER" prefHeight="0.0" prefWidth="40.0">
+                           <children>
+                              <Separator orientation="VERTICAL" prefHeight="292.5" />
+                           </children>
+                        </VBox>
+                        <VBox alignment="CENTER">
+                           <children>
+                              <Label fx:id="SubdivisionLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="60.0" prefWidth="230.0" text="Subdivision:">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Label>
+                              <CheckBox fx:id="EnableSubdivisionCheckBox" alignment="CENTER" mnemonicParsing="false" onAction="#EnableOrDisableSubdivisionSliders" prefHeight="60.0" prefWidth="230.0" text="Enable" textAlignment="CENTER">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </CheckBox>
+                              <HBox alignment="CENTER" prefHeight="60.0" prefWidth="230.0">
+                                 <children>
+                                    <Label prefWidth="66.0" text="Train:">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                       <HBox.margin>
+                                          <Insets right="10.0" />
+                                       </HBox.margin>
+                                    </Label>
+                                    <Slider fx:id="TrainSlider" blockIncrement="1.0" disable="true" max="98.0" min="1.0" minorTickCount="5" prefWidth="120.0" showTickMarks="true" stylesheets="@SliderStyle.css" value="80.0" />
+                                    <Label fx:id="TrainLabel" alignment="CENTER_RIGHT" contentDisplay="CENTER" minWidth="35.0" text="80%">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                    </Label>
+                                 </children>
+                              </HBox>
+                              <HBox alignment="CENTER" layoutX="10.0" layoutY="220.0" prefHeight="60.0" prefWidth="230.0">
+                                 <children>
+                                    <Label prefHeight="20.0" prefWidth="66.0" text="Validation:">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                       <HBox.margin>
+                                          <Insets right="10.0" />
+                                       </HBox.margin>
+                                    </Label>
+                                    <Slider fx:id="ValidationSlider" blockIncrement="1.0" disable="true" max="98.0" min="1.0" minorTickCount="5" prefWidth="120.0" showTickMarks="true" stylesheets="@SliderStyle.css" value="10.0" />
+                                    <Label fx:id="ValidationLabel" alignment="CENTER_RIGHT" contentDisplay="CENTER" minWidth="35.0" text="10%">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                    </Label>
+                                 </children>
+                              </HBox>
+                              <HBox alignment="CENTER" layoutX="10.0" layoutY="190.0" prefHeight="60.0" prefWidth="230.0">
+                                 <children>
+                                    <Label prefWidth="66.0" text="Test:">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                       <HBox.margin>
+                                          <Insets right="10.0" />
+                                       </HBox.margin>
+                                    </Label>
+                                    <Slider fx:id="TestSlider" blockIncrement="1.0" disable="true" max="98.0" min="1.0" minorTickCount="5" prefWidth="120.0" showTickMarks="true" stylesheets="@SliderStyle.css" value="10.0" />
+                                    <Label fx:id="TestLabel" alignment="CENTER_RIGHT" contentDisplay="CENTER" minWidth="35.0" text="10%">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                    </Label>
+                                 </children>
+                              </HBox>
+                              <Label fx:id="TotalLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="60.0" prefWidth="230.0" text="Total: 100">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <Label fx:id="OutputFolderLabel" prefHeight="60.0" prefWidth="500.0" text="Output folder: none" wrapText="true">
                      <font>
                         <Font size="14.0" />
                      </font>
                   </Label>
-                  <CheckBox fx:id="GrayscaleCheckBox" alignment="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" text="Grayscale" textAlignment="CENTER">
-                     <font>
-                        <Font size="14.0" />
-                     </font>
-                  </CheckBox>
-                  <CheckBox fx:id="HistogramEqualizationCheckBox" alignment="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" text="Histogram Equalization" textAlignment="CENTER">
-                     <font>
-                        <Font size="14.0" />
-                     </font>
-                  </CheckBox>
-                  <CheckBox fx:id="FaceDetectionCheckBox" alignment="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" text="Face Detection and Cut" textAlignment="CENTER">
-                     <font>
-                        <Font size="14.0" />
-                     </font>
-                  </CheckBox>
-                  <HBox alignment="CENTER" prefHeight="60.0" prefWidth="230.0">
-                     <children>
-                        <Label text="Width: ">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                           <HBox.margin>
-                              <Insets right="10.0" />
-                           </HBox.margin>
-                        </Label>
-                        <TextField fx:id="WidthTextField" promptText="Desired Photo Width:">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                        </TextField>
-                     </children>
-                  </HBox>
-                  <HBox alignment="CENTER" prefHeight="60.0" prefWidth="230.0">
-                     <children>
-                        <Label text="Height:">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                           <HBox.margin>
-                              <Insets right="10.0" />
-                           </HBox.margin>
-                        </Label>
-                        <TextField fx:id="HeightTextField" promptText="Desired Photo Height:">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                        </TextField>
-                     </children>
-                     <VBox.margin>
-                        <Insets />
-                     </VBox.margin>
-                  </HBox>
                </children>
             </VBox>
-            <VBox alignment="CENTER" prefHeight="0.0" prefWidth="60.0">
+            <VBox alignment="CENTER" prefHeight="0.0" prefWidth="40.0">
                <children>
-                  <Separator orientation="VERTICAL" prefHeight="300.0" />
+                  <Separator orientation="VERTICAL" prefHeight="350.0" />
                </children>
             </VBox>
             <VBox alignment="CENTER">
                <children>
-                  <Label fx:id="SubdivisionLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="60.0" prefWidth="230.0" text="Subdivision:">
+                  <Label fx:id="OutputImageFormatLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="60.0" prefWidth="230.0" text="Output image format:">
                      <font>
                         <Font size="14.0" />
                      </font>
                   </Label>
-                  <CheckBox fx:id="EnableSubdivisionCheckBox" alignment="CENTER" mnemonicParsing="false" onAction="#EnableOrDisableSubdivisionSliders" prefHeight="60.0" prefWidth="230.0" text="Enable" textAlignment="CENTER">
+                  <RadioButton fx:id="SameRadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" selected="true" style="-fx-alignment: center;" text="Same as input" textAlignment="CENTER" wrapText="true">
                      <font>
                         <Font size="14.0" />
                      </font>
-                  </CheckBox>
-                  <HBox alignment="CENTER" prefHeight="60.0" prefWidth="230.0">
-                     <children>
-                        <Label prefWidth="66.0" text="Train:">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                           <HBox.margin>
-                              <Insets right="10.0" />
-                           </HBox.margin>
-                        </Label>
-                        <Slider fx:id="TrainSlider" blockIncrement="1.0" disable="true" max="98.0" min="1.0" minorTickCount="5" prefWidth="120.0" showTickMarks="true" stylesheets="@SliderStyle.css" value="80.0" />
-                        <Label fx:id="TrainLabel" alignment="CENTER_RIGHT" contentDisplay="CENTER" minWidth="35.0" text="80%">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </HBox>
-                  <HBox alignment="CENTER" layoutX="10.0" layoutY="220.0" prefHeight="60.0" prefWidth="230.0">
-                     <children>
-                        <Label prefWidth="66.0" text="Validation:">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                           <HBox.margin>
-                              <Insets right="10.0" />
-                           </HBox.margin>
-                        </Label>
-                        <Slider fx:id="ValidationSlider" blockIncrement="1.0" disable="true" max="98.0" min="1.0" minorTickCount="5" prefWidth="120.0" showTickMarks="true" stylesheets="@SliderStyle.css" value="10.0" />
-                        <Label fx:id="ValidationLabel" alignment="CENTER_RIGHT" contentDisplay="CENTER" minWidth="35.0" text="10%">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </HBox>
-                  <HBox alignment="CENTER" layoutX="10.0" layoutY="190.0" prefHeight="60.0" prefWidth="230.0">
-                     <children>
-                        <Label prefWidth="66.0" text="Test:">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                           <HBox.margin>
-                              <Insets right="10.0" />
-                           </HBox.margin>
-                        </Label>
-                        <Slider fx:id="TestSlider" blockIncrement="1.0" disable="true" max="98.0" min="1.0" minorTickCount="5" prefWidth="120.0" showTickMarks="true" stylesheets="@SliderStyle.css" value="10.0" />
-                        <Label fx:id="TestLabel" alignment="CENTER_RIGHT" contentDisplay="CENTER" minWidth="35.0" text="10%">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </HBox>
-                  <Label fx:id="TotalLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="60.0" text="Total: 100%">
+                     <toggleGroup>
+                        <ToggleGroup fx:id="ImageFormat" />
+                     </toggleGroup>
+                  </RadioButton>
+                  <RadioButton fx:id="BMPRadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" style="-fx-alignment: center;" text="Windows bitmap (BMP)" textAlignment="CENTER" toggleGroup="$ImageFormat" wrapText="true">
                      <font>
                         <Font size="14.0" />
                      </font>
-                  </Label>
+                  </RadioButton>
+                  <RadioButton fx:id="JPEGRadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" style="-fx-alignment: center;" text="Joint Photographic Experts Group (JPEG)" textAlignment="CENTER" toggleGroup="$ImageFormat" wrapText="true">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </RadioButton>
+                  <RadioButton fx:id="JPEG2000RadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" style="-fx-alignment: center;" text="Joint Photographic Experts Group 2000 (JPEG 2000)" textAlignment="CENTER" toggleGroup="$ImageFormat" wrapText="true">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </RadioButton>
+                  <RadioButton fx:id="PNGRadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" style="-fx-alignment: center;" text="Portable Network Graphics (PNG)" textAlignment="CENTER" toggleGroup="$ImageFormat" wrapText="true">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </RadioButton>
+                  <RadioButton fx:id="TIFFRadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="230.0" style="-fx-alignment: center;" text="Tagged Image File Format (TIFF)" textAlignment="CENTER" toggleGroup="$ImageFormat" wrapText="true">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </RadioButton>
                </children>
             </VBox>
          </children>

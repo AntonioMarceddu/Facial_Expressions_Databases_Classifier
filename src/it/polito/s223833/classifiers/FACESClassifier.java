@@ -3,45 +3,44 @@ package it.polito.s223833.classifiers;
 import java.io.File;
 import java.io.IOException;
 
-import javafx.application.Platform;
-
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import it.polito.s223833.MainController;
-import it.polito.s223833.utils.UntarClass;
+import it.polito.s223833.utils.UnzipClass;
+import javafx.application.Platform;
 
-public class MUGClassifier extends Classifier implements Runnable 
+public class FACESClassifier extends Classifier implements Runnable 
 {
-	public MUGClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage) 
+	public FACESClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
-		super(controller, inputFile, outputDirectory, false, true, width, height, format, grayscale, histogramEqualization, faceDetection, subdivision, trainPercentage, validationPercentage, testPercentage);
+		super(controller, inputFile, outputDirectory, false, false, width, height, format, grayscale, histogramEqualization, faceDetection, subdivision, trainPercentage, validationPercentage, testPercentage);
 		// Minimum face size to search. Improves performance if set to a reasonable size, depending on the size of the faces of the people depicted in the database.
-		absoluteFaceSize = 250;
+		absoluteFaceSize = 1500;
 	}
 
 	@Override
 	public void run() 
 	{
-		// Extraction of the images of the MUG database.
-		UntarClass untarrer = new UntarClass();
+		// Extraction of the images of the JAFFE database.
+		UnzipClass unzipper = new UnzipClass();
 		try 
 		{
-			Platform.runLater(() -> controller.setPhaseLabel("Phase 1: extraction of the MUG images..."));
-			untarrer.untar(controller, inputFile, tempDirectory);
+			Platform.runLater(() -> controller.setPhaseLabel("Phase 1: extraction of the FACES images..."));
+			unzipper.Unzip(controller, inputFile, tempDirectory);
 		} 
 		catch (IOException e1) 
 		{
-			ExceptionManager("There was an error during the extraction of the MUG files.");
+			ExceptionManager("There was an error during the extraction of the FACES files.");
 			return;
 		}
 
 		// Verifies if the user has requested the cancellation of the current operation during the extraction phase.
 		if (!Thread.currentThread().isInterrupted()) 
 		{
-			// Creation of classification directories for the MUG database.
+			// Creation of classification directories for the FACES database.
 			if (!CreateDirectories()) 
 			{
 				return;
@@ -50,20 +49,28 @@ public class MUGClassifier extends Classifier implements Runnable
 			Platform.runLater(() -> controller.setPhaseLabel("Phase 2: classification..."));
 
 			// Reading the newly extracted photos.
-			File mugImages = new File(tempDirectory + "\\manual\\images\\");
-			File[] listOfFiles = mugImages.listFiles();
+			File facesImages = new File(tempDirectory);
+			File[] listOfFiles = facesImages.listFiles();
+			// If there is a folder, it will be open.
+			if ((listOfFiles.length == 1) && (listOfFiles[0].isDirectory())) 
+			{
+				facesImages = new File(listOfFiles[0].getAbsolutePath());
+				listOfFiles = facesImages.listFiles();
+			}
+
 			// Cycle performed for every single file in the folder.
 			int i = 0, numberOfFiles = listOfFiles.length;
 			while ((i < numberOfFiles) && (!Thread.currentThread().isInterrupted())) 
 			{
 				File file = listOfFiles[i];
 
-				// Verifies that the filename has the typical form of the MUG database files.
-				if ((file.isFile()) && (file.getName().matches("[0-9]{3}_[a-z]{2}_[0-9]{3}_[0-9]{4}\\.jpg"))) 
+				// Verifies that the filename has the typical form of the FACES database files.
+				if ((file.isFile()) && (file.getName().matches("[0-9]{3}(_[a-z]){4}\\.jpg"))) 
 				{
 					faceFound = true;
 					// Open the image to be analyzed.
-					Mat image = Imgcodecs.imread(file.getAbsolutePath()), resizedFace = Mat.zeros(imageSize, CvType.CV_8UC1);
+					Mat image = Imgcodecs.imread(file.getAbsolutePath()),
+							resizedFace = Mat.zeros(imageSize, CvType.CV_8UC1);
 
 					// Conversion of the image in grayscale (optional).
 					if (grayscale) 
@@ -89,33 +96,30 @@ public class MUGClassifier extends Classifier implements Runnable
 					// Photo classification phase.
 					if (faceFound == true) 
 					{
-						if (file.getName().contains("an")) 
+						String expression = file.getName().substring(8, 9);
+						if (expression.equals("a")) 
 						{
 							SaveImageInTheChosenFormat(angerDirectory.getAbsolutePath(), file.getName(), resizedFace);
 						} 
-						else if (file.getName().contains("di")) 
+						else if (expression.equals("d")) 
 						{
 							SaveImageInTheChosenFormat(disgustDirectory.getAbsolutePath(), file.getName(), resizedFace);
 						} 
-						else if (file.getName().contains("fe")) 
+						else if (expression.equals("f")) 
 						{
 							SaveImageInTheChosenFormat(fearDirectory.getAbsolutePath(), file.getName(), resizedFace);
 						} 
-						else if (file.getName().contains("ha")) 
+						else if (expression.equals("h")) 
 						{
 							SaveImageInTheChosenFormat(happinessDirectory.getAbsolutePath(), file.getName(), resizedFace);
-						}
-						else if (file.getName().contains("ne")) 
+						} 
+						else if (expression.equals("n")) 
 						{
 							SaveImageInTheChosenFormat(neutralityDirectory.getAbsolutePath(), file.getName(), resizedFace);
 						} 
-						else if (file.getName().contains("sa")) 
+						else if (expression.equals("s")) 
 						{
 							SaveImageInTheChosenFormat(sadnessDirectory.getAbsolutePath(), file.getName(), resizedFace);
-						} 
-						else if (file.getName().contains("su")) 
-						{
-							SaveImageInTheChosenFormat(surpriseDirectory.getAbsolutePath(), file.getName(),	resizedFace);
 						}
 						// Release of the initialized variables.
 						resizedFace.release();
@@ -138,8 +142,8 @@ public class MUGClassifier extends Classifier implements Runnable
 				}
 			}
 			// If subdivision is active, the images will be divided between train, validation and test.
-			if ((subdivision) && (!Thread.currentThread().isInterrupted())) 
-			{
+			if ((subdivision) && (!Thread.currentThread().isInterrupted()))
+{
 				Platform.runLater(() -> controller.setPhaseLabel("Phase 3: subdivision between train, validation and test folder..."));
 				if (!SubdivideImages(trainPercentage, validationPercentage, testPercentage)) 
 				{
@@ -153,7 +157,7 @@ public class MUGClassifier extends Classifier implements Runnable
 			DeleteAllDirectories();
 			Platform.runLater(() -> controller.ShowAttentionDialog("Classification interrupted.\n"));
 		}
-		// Otherwise only the temporary one will be deleted.
+		// Otherwise only temporary ones will be deleted.
 		else 
 		{
 			if (subdivision) 

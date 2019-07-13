@@ -11,12 +11,12 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-public class Main extends Application
+public class Main extends Application 
 {
 	@Override
-	public void start(Stage primaryStage)
+	public void start(Stage primaryStage) 
 	{
-		try
+		try 
 		{
 			// Loading the FXML layout.
 			FXMLLoader loader = new FXMLLoader(getClass().getResource("MainWindow.fxml"));
@@ -26,37 +26,36 @@ public class Main extends Application
 			Scene scene = new Scene(rootElement);
 			// Creation and visualization of the stage with the chosen title and with the scene previously created.
 			primaryStage.setTitle("Facial Expression Database Classifier");
-			primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("icon.png"))); 
+			primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("icon.png")));
 			primaryStage.setScene(scene);
-			primaryStage.show();	
-			
+			primaryStage.show();
+
 			// Loading the controller.
-			MainController controller = loader.getController();				
-			controller.SetStage(primaryStage);		
-			
+			MainController controller = loader.getController();
+			controller.SetStage(primaryStage);
+
 			// Ensure proper thread closings when exiting the program.
 			primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() 
 			{
-			    @Override
-			    public void handle(WindowEvent event) 
-			    {
-			        controller.AbortClassification();
-			    }
+				@Override
+				public void handle(WindowEvent event) 
+				{
+					controller.AbortClassification();
+				}
 			});
-		}
-		catch (Exception e)
+		} 
+		catch (Exception e) 
 		{
 			e.printStackTrace();
 		}
 	}
-	
-	public static void main(String[] args)
+
+	public static void main(String[] args) 
 	{
-		// Loading the native OpenCV library.
-		// N.B. the library is searched in the lib folder, next to the .jar file.
+		// Loading the native OpenCV library. N.B. the library is searched in the lib folder.
 		String opencvpath = System.getProperty("user.dir") + "\\lib\\";
-		System.load(opencvpath + Core.NATIVE_LIBRARY_NAME + ".dll"); 
-		
+		System.load(opencvpath + Core.NATIVE_LIBRARY_NAME + ".dll");
+
 		launch(args);
 	}
 }
