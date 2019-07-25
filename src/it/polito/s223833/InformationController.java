@@ -63,7 +63,7 @@ public class InformationController
 						+ "•	change image format;\r\n" + "•	conversion in grayscale color space;\r\n"
 						+ "•	face detection to crop the images to faces only;\r\n" + "•	histogram equalization;\r\n"
 						+ "•	scaling of horizontal and vertical resolutions;\r\n"
-						+ "•	subdivision in train, validation and test dataset.\r\n\n"
+						+ "•	subdivision in train, validation (optional) and test dataset.\r\n\n"
 						+ "This allows, for the people who make use of this databases, to minimize the time necessary for their classification, so that they can dedicate directly to other tasks, such as the training of a neural network.\r\n\n\n");
 		InformationTextFlow.getChildren().add(text2);
 
@@ -77,7 +77,7 @@ public class InformationController
 				+ "•	on the lower part of the window, there are buttons for selecting input file, output folder, and for starting and canceling the classification;\r\n"
 				+ "•	finally, above the buttons, there is the progress bar, that indicates the progression of the current operation.\r\n\n"
 				+ "It should be noted that:\r\n"
-				+ "•	user must choose a size for the photos to be classified: it must be between 48x48 and 1024x1024 pixels. For the FER2013 database, since the starting images have a 48x48 pixels resolutions, this possibility, alongside to the face cropping feature, is not available;\r\n"
+				+ "•	user must choose a size for the photos to be classified: it must be between 32x32 and 1024x1024 pixels;\r\n"
 				+ "•	JAFFE and FER2013 databases only contain grayscale images;\r\n"
 				+ "•	RaFD database also contains photos taken in profile: the program excels in the recognition of frontal photos and allows recognition to be made even for this type of photo, although it is likely that it will not be able to classify all the photos of this type.\r\n\n\n");
 		InformationTextFlow.getChildren().add(text4);
@@ -88,7 +88,8 @@ public class InformationController
 
 		Text text6 = new Text("•	10/05/2019 - Version 1.0.0 released.\r\n"
 				+ "•	10/07/2019 - Version 2.0.0 released: subdivision function between train, validation, and test dataset has been added; many minor improvements to the code and its readability have also been made.\r\n"
-				+ "•	14/07/2019 - Version 3.0.0 released: the change image format function has been added; support to FACES database has been added; many corrections and improvements to the code and its readability have also been made.\r\n\n\n");
+				+ "•	14/07/2019 - Version 3.0.0 released: the change image format function has been added; support to FACES database has been added; many corrections and improvements to the code and its readability have also been made.\r\n"
+				+ "•	26/07/2019 - Version 3.1.0 released: option for creating or not the validation folder during the subdivision added; small fixes to the code have also been made.\r\n\n\n");
 		InformationTextFlow.getChildren().add(text6);
 
 		Text text7 = new Text("FINAL NOTES\n\n");

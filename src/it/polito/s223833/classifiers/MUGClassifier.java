@@ -15,9 +15,9 @@ import it.polito.s223833.utils.UntarClass;
 
 public class MUGClassifier extends Classifier implements Runnable 
 {
-	public MUGClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage) 
+	public MUGClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
-		super(controller, inputFile, outputDirectory, false, true, width, height, format, grayscale, histogramEqualization, faceDetection, subdivision, trainPercentage, validationPercentage, testPercentage);
+		super(controller, inputFile, outputDirectory, false, true, width, height, format, grayscale, histogramEqualization, faceDetection, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
 		// Minimum face size to search. Improves performance if set to a reasonable size, depending on the size of the faces of the people depicted in the database.
 		absoluteFaceSize = 250;
 	}

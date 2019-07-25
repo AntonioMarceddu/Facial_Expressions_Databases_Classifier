@@ -15,13 +15,13 @@ import it.polito.s223833.MainController;
 
 public class FER2013Classifier extends Classifier implements Runnable 
 {
-	private int width = 48, height = 48, imageCounter = 0;
+	private int defaultWidth = 48, defaultHeight = 48, imageCounter = 0;
 	private boolean defaultSubdivision;
 	private File trainingDirectory = null, validationDirectory = null, testDirectory = null;
 
-	public FER2013Classifier(MainController controller, String inputFile, String outputDirectory, int format, boolean histogramEqualization, boolean defaultSubdivision, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage) 
+	public FER2013Classifier(MainController controller, String inputFile, String outputDirectory, int width, int height, int format, boolean histogramEqualization, boolean defaultSubdivision, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
-		super(controller, inputFile, outputDirectory, format, histogramEqualization, subdivision, trainPercentage, validationPercentage, testPercentage);
+		super(controller, inputFile, outputDirectory, false, true, width, height, format, false, histogramEqualization, false, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
 		// Default subdivision of the FER2013 database.
 		this.defaultSubdivision = defaultSubdivision;
 	}
@@ -87,16 +87,21 @@ public class FER2013Classifier extends Classifier implements Runnable
 				String[] secondSplit = firstSplit[1].split(" ");
 				// Image size control: must be 48 * 48.
 				int size = secondSplit.length;
-				if (size == width * height) 
+				if (size == defaultWidth * defaultHeight) 
 				{
 					// Photo creation phase.
-					Mat image = Mat.eye(width, height, CvType.CV_8UC1);
+					Mat image = Mat.eye(defaultWidth, defaultHeight, CvType.CV_8UC1);
 					int j, k;
 					for (int i = 0; i < size; i++) 
 					{
-						j = i / width;
-						k = i - (width * j);
+						j = i / defaultWidth;
+						k = i - (defaultHeight * j);
 						image.put(j, k, Integer.parseInt(secondSplit[i]));
+					}
+					// Resize the photo if width and height are different from 48x48.
+					if((imageSize.width != defaultWidth) || (imageSize.height != defaultHeight))
+					{
+						Imgproc.resize(image, image, imageSize);
 					}
 					// Histogram equalization of the image (optional).
 					if (histogramEqualization) 

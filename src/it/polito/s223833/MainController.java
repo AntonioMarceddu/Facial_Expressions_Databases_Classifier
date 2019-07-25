@@ -39,7 +39,7 @@ public class MainController
 
 	/* FXML checkboxes. */
 	@FXML
-	private CheckBox GrayscaleCheckBox, HistogramEqualizationCheckBox, FaceDetectionCheckBox, EnableSubdivisionCheckBox;
+	private CheckBox GrayscaleCheckBox, HistogramEqualizationCheckBox, FaceDetectionCheckBox, EnableSubdivisionCheckBox, EnableValidationCheckBox;
 
 	/* FXML labels. */
 	@FXML
@@ -90,15 +90,25 @@ public class MainController
 			public void changed(ObservableValue<? extends Number> ov, Number oldVal, Number newVal) 
 			{
 				TrainLabel.setText(newVal.intValue() + "%");
-				int total = newVal.intValue() + (int) ValidationSlider.getValue() + (int) TestSlider.getValue();
-				int diff = 100 - total, validationVal = (int) ValidationSlider.getValue();
-				if (validationVal > 1) 
+				int total =0;
+				if(ValidationSlider.isDisabled())
 				{
-					ValidationSlider.setValue(ValidationSlider.getValue() + diff);
-				} 
-				else 
+					total = newVal.intValue() + (int) TestSlider.getValue();
+					int diff = 100 - total, testVal = (int) TestSlider.getValue();
+					TestSlider.setValue(testVal + diff);
+				}
+				else
 				{
-					TestSlider.setValue(TestSlider.getValue() + diff);
+					total = newVal.intValue() + (int) ValidationSlider.getValue() + (int) TestSlider.getValue();
+					int diff = 100 - total, testVal = (int) TestSlider.getValue();
+					if (testVal > 1) 
+					{
+						TestSlider.setValue(testVal + diff);
+					} 
+					else 
+					{
+						ValidationSlider.setValue(ValidationSlider.getValue() + diff);
+					}
 				}
 			}
 		});
@@ -112,8 +122,10 @@ public class MainController
 				int diff = 100 - total, testVal = (int) TestSlider.getValue();
 				if (testVal > 1) 
 				{
-					TestSlider.setValue(TestSlider.getValue() + diff);
-				} else {
+					TestSlider.setValue(testVal + diff);
+				} 
+				else 
+				{
 					TrainSlider.setValue(TrainSlider.getValue() + diff);
 				}
 			}
@@ -124,15 +136,25 @@ public class MainController
 			public void changed(ObservableValue<? extends Number> ov, Number oldVal, Number newVal) 
 			{
 				TestLabel.setText(newVal.intValue() + "%");
-				int total = newVal.intValue() + (int) TrainSlider.getValue() + (int) ValidationSlider.getValue();
-				int diff = 100 - total, trainingVal = (int) TrainSlider.getValue();
-				if (trainingVal > 1) 
+				int total = 0;
+				if(ValidationSlider.isDisabled())
 				{
-					TrainSlider.setValue(TrainSlider.getValue() + diff);
-				} 
-				else 
+					total = newVal.intValue() + (int) TrainSlider.getValue();
+					int diff = 100 - total, trainVal = (int) TrainSlider.getValue();
+					TrainSlider.setValue(trainVal + diff);
+				}
+				else
 				{
-					ValidationSlider.setValue(ValidationSlider.getValue() + diff);
+					total = newVal.intValue() + (int) TrainSlider.getValue() + (int) ValidationSlider.getValue();			
+					int diff = 100 - total, trainVal = (int) TrainSlider.getValue();
+					if (trainVal > 1) 
+					{
+						TrainSlider.setValue(trainVal + diff);
+					} 
+					else 
+					{
+						ValidationSlider.setValue(ValidationSlider.getValue() + diff);
+					}
 				}
 			}
 		});
@@ -201,8 +223,56 @@ public class MainController
 	public void EnableOrDisableSubdivisionSliders() 
 	{
 		TrainSlider.setDisable(!TrainSlider.isDisable());
-		ValidationSlider.setDisable(!ValidationSlider.isDisable());
 		TestSlider.setDisable(!TestSlider.isDisable());
+		EnableValidationCheckBox.setDisable(!EnableValidationCheckBox.isDisable());
+		ValidationSlider.setDisable(true);
+	}
+	
+	/* Public method for enabling or disabling the validation sliders. */
+	public void EnableOrDisableValidationSlider() 
+	{
+		ValidationSlider.setDisable(!ValidationSlider.isDisabled());
+		
+		double trainValue = TrainSlider.getValue();
+		double testValue = TestSlider.getValue();
+
+		if(ValidationSlider.isDisabled())
+		{
+			// Update the maximum.
+			TrainSlider.setMax(99);
+			TestSlider.setMax(99);			
+			// Set validation slider value to the minimum.
+			ValidationSlider.setValue(1.0);
+			ValidationLabel.setText("0%");
+			
+			// Add one to train or test slider.
+			if((int)trainValue<=98)
+			{
+				TrainSlider.setValue(trainValue+1);
+			}
+			else
+			{
+				TestSlider.setValue(testValue+1);
+			}
+		}
+		else
+		{
+			// Update the maximum.
+			TrainSlider.setMax(98);
+			TestSlider.setMax(98);			
+			// Set validation slider value to the minimum.
+			ValidationLabel.setText("1%");
+			
+			// Subtract one to train or test slider.
+			if((int)trainValue>=2)
+			{
+				TrainSlider.setValue(trainValue-1);
+			}
+			else
+			{
+				TestSlider.setValue(testValue-1);
+			}
+		}
 	}
 
 	/* Public method called by the "Choose Input File" button. */
@@ -319,8 +389,7 @@ public class MainController
 				// Verifies that the output folder is empty.
 				if (outputDir.list().length == 0) 
 				{
-					// Verifies that the user has chosen the width and height values for the output
-					// photos.
+					// Verifies that the user has chosen the width and height values for the output photos.
 					if ((!WidthTextField.getText().isEmpty()) && (!HeightTextField.getText().isEmpty())) 
 					{
 						int width = 0, height = 0;
@@ -334,11 +403,14 @@ public class MainController
 							ShowErrorDialog("The width and the height must be integers.");
 							return;
 						}
-						// Verifies that the width and height values entered are between 48 and 1024.
-						if (width >= 48 && width <= 1024 && height >= 48 && height <= 1024) 
+						// Verifies that the width and height values entered are between 32 and 1024.
+						if (width >= 32 && width <= 1024 && height >= 32 && height <= 1024) 
 						{
 							boolean classify = false;
-
+							
+							// Get the validation value.
+							boolean validation=EnableSubdivisionCheckBox.isSelected()&&EnableValidationCheckBox.isSelected();
+							
 							// Get the image format.
 							getImageFormat();
 
@@ -356,7 +428,7 @@ public class MainController
 									// Verifies that the file containing the emotion labels exists.
 									if (emotionFileTest.exists()) 
 									{
-										CKClassifier classifier = new CKClassifier(this, inputFile, emotionFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+										CKClassifier classifier = new CKClassifier(this, inputFile, emotionFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 										classifierThread = new Thread(classifier);
 										classify = true;
 									} 
@@ -376,7 +448,7 @@ public class MainController
 								// Verifies that the user has chosen the correct files previously.
 								if (inputFile.substring(inputFile.lastIndexOf('\\') + 1).matches("([a-zA-Z]{3}_){2}[0-9]{2}_[0-9]{2}(-[0-9]{2}){2}_CEST_[0-9]{4}\\.zip")) 
 								{
-									FACESClassifier classifier = new FACESClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+									FACESClassifier classifier = new FACESClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 									classifierThread = new Thread(classifier);
 									classify = true;
 								} 
@@ -405,16 +477,13 @@ public class MainController
 									{
 										ShowAttentionDialog("The FER2013 Database has very low quality images (48x48): face detection option will be ignored.");
 									}
-									if (width != 48 || height != 48) 
-									{
-										ShowAttentionDialog("The FER2013 Database has very low quality images (48x48): width and height will be set to 48.");
-									}
 									if (EnableSubdivisionCheckBox.isSelected()) 
 									{
-										classifier = new FER2013Classifier(this, inputFile, outputDirectory, format, HistogramEqualizationCheckBox.isSelected(), false, true, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+										classifier = new FER2013Classifier(this, inputFile, outputDirectory, width, height, format, HistogramEqualizationCheckBox.isSelected(), false, true, validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 									} 
 									else 
 									{
+										boolean defaultSubdivision=false;
 										Alert alert = new Alert(AlertType.CONFIRMATION);
 										alert.setTitle("Facial Expression Database Classificator");
 										alert.setHeaderText("Request");
@@ -426,12 +495,10 @@ public class MainController
 
 										if (option.get() == ButtonType.OK) 
 										{
-											classifier = new FER2013Classifier(this, inputFile, outputDirectory, format, HistogramEqualizationCheckBox.isSelected(), true, false, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+											defaultSubdivision=true;
 										} 
-										else 
-										{
-											classifier = new FER2013Classifier(this, inputFile, outputDirectory, format, HistogramEqualizationCheckBox.isSelected(), false, false, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
-										}
+										classifier = new FER2013Classifier(this, inputFile, outputDirectory, width, height, format, HistogramEqualizationCheckBox.isSelected(), defaultSubdivision, false, validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+
 									}
 									classifierThread = new Thread(classifier);
 									classify = true;
@@ -451,7 +518,7 @@ public class MainController
 									{
 										ShowAttentionDialog("The JAFFE Database is already a grayscale database: grayscale option will be ignored.");
 									}
-									JAFFEClassifier classifier = new JAFFEClassifier(this, inputFile, outputDirectory, width, height, format, HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+									JAFFEClassifier classifier = new JAFFEClassifier(this, inputFile, outputDirectory, width, height, format, HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 									classifierThread = new Thread(classifier);
 									classify = true;
 								} 
@@ -466,7 +533,7 @@ public class MainController
 								// Verifies that the user has chosen the correct files previously.
 								if (inputFile.contains("manual.tar")) 
 								{
-									MUGClassifier classifier = new MUGClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+									MUGClassifier classifier = new MUGClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 									classifierThread = new Thread(classifier);
 									classify = true;
 								} 
@@ -495,16 +562,16 @@ public class MainController
 
 										if (option.get() == ButtonType.OK) 
 										{
-											classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), true, EnableSubdivisionCheckBox.isSelected(), TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+											classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), true, EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 										} 
 										else 
 										{
-											classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), false, EnableSubdivisionCheckBox.isSelected(), TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+											classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), false, EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 										}
 									} 
 									else 
 									{
-										classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), false, EnableSubdivisionCheckBox.isSelected(), TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+										classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), false, EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 									}
 									classifierThread = new Thread(classifier);
 									classify = true;
@@ -523,12 +590,12 @@ public class MainController
 						} 
 						else 
 						{
-							ShowAttentionDialog("You must write a width and an height between 48 and 1024.");
+							ShowAttentionDialog("You must write a width and a height between 32 and 1024.");
 						}
 					} 
 					else 
 					{
-						ShowAttentionDialog("You must choose a width and an height for the output images.");
+						ShowAttentionDialog("You must choose a width and a height for the output images.");
 					}
 				} 
 				else 

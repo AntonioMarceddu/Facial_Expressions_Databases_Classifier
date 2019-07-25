@@ -27,12 +27,12 @@ public class Classifier
 	protected Size imageSize;
 	protected String haarclassifierpath, inputFile, outputDirectory, tempDirectory;
 	protected int format = 0, absoluteFaceSize = 100, classified = 0;
-	protected boolean contemptState = false, surpriseState = false, grayscale = false, histogramEqualization = false, faceDetection = false, faceFound = true, subdivision = false;
+	protected boolean contemptState = false, surpriseState = false, grayscale = false, histogramEqualization = false, faceDetection = false, faceFound = true, subdivision = false, validation=false;
 	protected double percentage = 0, difference = 0, trainPercentage = 0, validationPercentage = 0, testPercentage = 0;
 	protected File angerDirectory = null, contemptDirectory = null, disgustDirectory = null, fearDirectory = null, happinessDirectory = null, neutralityDirectory = null, sadnessDirectory = null, surpriseDirectory = null;
 
 	/* Constructor for all database, except for Fer2013. */
-	Classifier(MainController controller, String inputFile, String outputDirectory, boolean contemptState, boolean surpriseState, int width, int height, int format, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage) 
+	Classifier(MainController controller, String inputFile, String outputDirectory, boolean contemptState, boolean surpriseState, int width, int height, int format, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
 		this.controller = controller;
 		this.inputFile = inputFile;
@@ -44,6 +44,7 @@ public class Classifier
 		this.histogramEqualization = histogramEqualization;
 		this.faceDetection = faceDetection;
 		this.subdivision = subdivision;
+		this.validation=validation;
 		this.trainPercentage = trainPercentage;
 		this.validationPercentage = validationPercentage;
 		this.testPercentage = testPercentage;
@@ -55,22 +56,6 @@ public class Classifier
 		// Instancing of the CascadeClassifier.
 		haarclassifierpath = System.getProperty("user.dir") + "\\lib\\";
 		frontalFaceCascade = new CascadeClassifier(haarclassifierpath + "haarcascade_frontalface_alt.xml");
-	}
-
-	/* Constructor for Fer2013. */
-	Classifier(MainController controller, String inputFile, String outputDirectory, int format, boolean histogramEqualization, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage) 
-	{
-		this.controller = controller;
-		this.inputFile = inputFile;
-		this.outputDirectory = outputDirectory;
-		this.format = format;
-		this.histogramEqualization = histogramEqualization;
-		this.subdivision = subdivision;
-		this.trainPercentage = trainPercentage;
-		this.validationPercentage = validationPercentage;
-		this.testPercentage = testPercentage;
-
-		surpriseState = true;
 	}
 
 	/* Method for updating the progress bar. */
@@ -420,52 +405,59 @@ public class Classifier
 				UpdateBar(0.14);
 			}
 
-			// Create outer directories.
-			File trainingDirectory, validationDirectory, testDirectory;
-			trainingDirectory = new File(outputDirectory, "Training");
-			trainingDirectory.mkdirs();
+			// Creates the train directory.
+			File trainDirectory, validationDirectory, testDirectory;
+			trainDirectory = new File(outputDirectory, "Train");
+			trainDirectory.mkdirs();
 			UpdateBar(0.16);
-			validationDirectory = new File(outputDirectory, "Validation");
-			validationDirectory.mkdirs();
-			UpdateBar(0.18);
+			
+			// Creates the test directory and the inner directories.
 			testDirectory = new File(outputDirectory, "Test");
 			testDirectory.mkdirs();
-			UpdateBar(0.2);
-
-			// Create inner directories for validation and testing.
-			if (!CreateDirectoriesWithParameterAndWithoutInitialization(validationDirectory)) 
-			{
-				return false;
-			}
-			UpdateBar(0.25);
+			UpdateBar(0.18);
 			if (!CreateDirectoriesWithParameterAndWithoutInitialization(testDirectory)) 
 			{
 				return false;
 			}
-			UpdateBar(0.3);
+			UpdateBar(0.20);
+			
+			if(validation)
+			{
+				// Creates the validation directory and the inner directories.
+				validationDirectory = new File(outputDirectory, "Validation");
+				validationDirectory.mkdirs();
+				UpdateBar(0.22);
+				if (!CreateDirectoriesWithParameterAndWithoutInitialization(validationDirectory)) 
+				{
+					return false;
+				}
+				UpdateBar(0.24);
+				
+				//Put a percentage of the image of the dataset in the validation directory.
+				subdivideImages(validationDirectory.getAbsolutePath(), validPerc, angerTotalNumber, contemptTotalNumber, disgustTotalNumber, fearTotalNumber, happinessTotalNumber, neutralityTotalNumber, sadnessTotalNumber, surpriseTotalNumber);
+				UpdateBar(0.57);
+			}
 
-			// Subdivision of a percentage of the images in the validation and test directories.
-			subdivideImages(validationDirectory.getAbsolutePath(), validPerc, angerTotalNumber, contemptTotalNumber, disgustTotalNumber, fearTotalNumber, happinessTotalNumber, neutralityTotalNumber, sadnessTotalNumber, surpriseTotalNumber);
-			UpdateBar(0.6);
-			subdivideImages(testDirectory.getAbsolutePath(), validPerc, angerTotalNumber, contemptTotalNumber, disgustTotalNumber, fearTotalNumber, happinessTotalNumber, neutralityTotalNumber, sadnessTotalNumber, surpriseTotalNumber);
+			//Put a percentage of the image of the dataset in the test directory.
+			subdivideImages(testDirectory.getAbsolutePath(), testPerc, angerTotalNumber, contemptTotalNumber, disgustTotalNumber, fearTotalNumber, happinessTotalNumber, neutralityTotalNumber, sadnessTotalNumber, surpriseTotalNumber);
 			UpdateBar(0.9);
 
-			// Move the remaining folders and images in the training directory.
+			// Move the remaining folders and images in the train directory.
 			if (!Thread.currentThread().isInterrupted()) 
 			{
-				FileUtils.moveDirectoryToDirectory(angerDirectory, trainingDirectory, true);
+				FileUtils.moveDirectoryToDirectory(angerDirectory, trainDirectory, true);
 				if (contemptState) 
 				{
-					FileUtils.moveDirectoryToDirectory(contemptDirectory, trainingDirectory, true);
+					FileUtils.moveDirectoryToDirectory(contemptDirectory, trainDirectory, true);
 				}
-				FileUtils.moveDirectoryToDirectory(disgustDirectory, trainingDirectory, true);
-				FileUtils.moveDirectoryToDirectory(fearDirectory, trainingDirectory, true);
-				FileUtils.moveDirectoryToDirectory(happinessDirectory, trainingDirectory, true);
-				FileUtils.moveDirectoryToDirectory(neutralityDirectory, trainingDirectory, true);
-				FileUtils.moveDirectoryToDirectory(sadnessDirectory, trainingDirectory, true);
+				FileUtils.moveDirectoryToDirectory(disgustDirectory, trainDirectory, true);
+				FileUtils.moveDirectoryToDirectory(fearDirectory, trainDirectory, true);
+				FileUtils.moveDirectoryToDirectory(happinessDirectory, trainDirectory, true);
+				FileUtils.moveDirectoryToDirectory(neutralityDirectory, trainDirectory, true);
+				FileUtils.moveDirectoryToDirectory(sadnessDirectory, trainDirectory, true);
 				if (surpriseState) 
 				{
-					FileUtils.moveDirectoryToDirectory(surpriseDirectory, trainingDirectory, true);
+					FileUtils.moveDirectoryToDirectory(surpriseDirectory, trainDirectory, true);
 				}
 				UpdateBar(1);
 			}

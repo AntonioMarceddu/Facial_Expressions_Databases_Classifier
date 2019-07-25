@@ -15,9 +15,9 @@ import it.polito.s223833.utils.UnzipClass;
 
 public class JAFFEClassifier extends Classifier implements Runnable 
 {
-	public JAFFEClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, int format, boolean histogramEqualization, boolean faceDetection, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage) 
+	public JAFFEClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, int format, boolean histogramEqualization, boolean faceDetection, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
-		super(controller, inputFile, outputDirectory, false, true, width, height, format, false, histogramEqualization, faceDetection, subdivision, trainPercentage, validationPercentage, testPercentage);
+		super(controller, inputFile, outputDirectory, false, true, width, height, format, false, histogramEqualization, faceDetection, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
 	}
 
 	@Override

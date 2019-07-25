@@ -14,9 +14,9 @@ import javafx.application.Platform;
 
 public class FACESClassifier extends Classifier implements Runnable 
 {
-	public FACESClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage) 
+	public FACESClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
-		super(controller, inputFile, outputDirectory, false, false, width, height, format, grayscale, histogramEqualization, faceDetection, subdivision, trainPercentage, validationPercentage, testPercentage);
+		super(controller, inputFile, outputDirectory, false, false, width, height, format, grayscale, histogramEqualization, faceDetection, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
 		// Minimum face size to search. Improves performance if set to a reasonable size, depending on the size of the faces of the people depicted in the database.
 		absoluteFaceSize = 1500;
 	}

@@ -19,9 +19,9 @@ public class CKClassifier extends Classifier implements Runnable
 {
 	private String emotionFile;
 
-	public CKClassifier(MainController controller, String inputFile, String emotionFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, double trainPercentage, double validationPercentage, double testPercentage) 
+	public CKClassifier(MainController controller, String inputFile, String emotionFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
-		super(controller, inputFile, outputDirectory, true, true, width, height, format, grayscale, histogramEqualization, faceDetection, subdivision, trainPercentage, validationPercentage, testPercentage);
+		super(controller, inputFile, outputDirectory, true, true, width, height, format, grayscale, histogramEqualization, faceDetection, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
 		// Minimum face size to search. Improves performance if set to a reasonable size, depending on the size of the faces of the people depicted in the database.
 		absoluteFaceSize = 150;
 		// Emotion file.

@@ -24,7 +24,7 @@ In practice, FEDC exploits the pre-classification implemented by database creato
 * histogram equalization;
 * face detection to crop the images to face only;
 * scaling of horizontal and vertical resolutions;
-* subdivision in train, validation and test dataset.
+* subdivision in train, validation (optional) and test dataset.
 
 This allows, for the people who make use of this databases, to minimize the time necessary for their classification, so that they can dedicate directly to other tasks, such as training of a neural network.
 
@@ -36,7 +36,7 @@ FEDC has a clean and essential user interface, consisting of four macro areas:
 * finally, above the buttons, there is the progress bar, that indicates the progression of the current operation.
 
 It should be noted that:
-* user must choose a size for the photos to be classified: it must be between 48x48 and 1024x1024 pixels. For the FER2013 database, since the starting images have a 48x48 pixels resolutions, this possibility, alongside to the face cropping feature, is not available;
+* user must choose a size for the photos to be classified: it must be between 32x32 and 1024x1024 pixels;
 * JAFFE and FER2013 databases only contain grayscale images;
 * RaFD database also contains photos taken in profile: the program excels in the recognition of frontal photos and allows recognition to be made even for this type of photo, although it is likely that it will not be able to classify all the photos of this type.
 
@@ -44,6 +44,7 @@ It should be noted that:
 * 10/05/2019 - Version 1.0.0 released.
 * 10/07/2019 - Version 2.0.0 released: subdivision function between train, validation, and test dataset has been added; many minor improvements to the code and its readability have also been made.
 * 14/07/2019 - Version 3.0.0 released: the change image format function has been added; support to FACES database has been added; many corrections and improvements to the code and its readability have also been made.
+* 26/07/2019 - Version 3.1.0 released: option for creating or not the validation folder during the subdivision added; small fixes to the code have also been made.
 
 ### Final Notes
 The images automatically classified with this program can be used, for example, for the training of a neural network capable of recognizing facial expressions, through the use of Keras or similar frameworks. Since the code of the program is freely usable, it is possible to implement small changes to make the program work even in totally different contexts.
@@ -72,7 +73,7 @@ Nella pratica, FEDC sfrutta la pre-classificazione implementata dai creatori del
 * equalizzazione dell'istogramma;
 * ridimensionamento della risoluzione orizzontale e verticale;
 * rilevamento del volto per il ritaglio delle immagini al solo volto;
-* suddivisione in train, validation e test dataset.
+* suddivisione in train, validation (opzionale) e test dataset.
 
 Ciò consente, per le persone che fanno uso di questi database, di ridurre al minimo il tempo necessario per la loro classificazione, in modo che possano dedicarsi direttamente ad altre attività, come l'addestramento di una rete neurale.
 
@@ -84,14 +85,15 @@ FEDC ha un'interfaccia utente pulita ed essenziale, composta da quattro macro ar
 * infine, sopra i bottoni, è presente la barra di avanzamento, che indica la progressione dell'operazione corrente.
 
 Occorre notare che:
-* l'utente deve scegliere una dimensione per le foto da classificare: essa deve essere compresa tra 48x48 e 1024x1024 pixel. Per il database FER2013, poiché le immagini iniziali hanno una risoluzione di 48x48 pixel, questa possibilità, insieme alla funzione di ritaglio del volto, non è disponibile;
+* l'utente deve scegliere una dimensione per le foto da classificare: essa deve essere compresa tra 32x32 e 1024x1024 pixel;
 * i database JAFFE e FER2013 contengono solo immagini in scala di grigi;
 * il database RaFD contiene anche delle foto scattate di profilo: il programma eccelle nel riconoscimento delle foto frontali e consente il riconoscimento anche per questo tipo di foto, anche se è probabile che non sarà in grado di classificare tutte le foto di questo tipo.
 
 ### Aggiornamenti
 * 10/05/2019 - Versione 1.0.0 rilasciata.
 * 10/07/2019 - Versione 2.0.0 rilasciata: funzione di suddivisione tra train, validation e test dataset aggiunta; son stati fatti inoltre molti piccoli miglioramenti al codice e alla sua leggibilità.
-* 14/07/2019 - Versione 3.0.0 rilasciata: è stata aggiunta la funzione di cambio del formato dell'immagine; è stato aggiunto il supporto al FACES database; sono state inoltre apportate molte correzioni e miglioramenti al codice e alla sua leggibilità.
+* 14/07/2019 - Versione 3.0.0 rilasciata: funzione di cambio del formato dell'immagine aggiunta; è stato aggiunto il supporto al FACES database; sono state inoltre apportate molte correzioni e miglioramenti al codice e alla sua leggibilità.
+* 26/07/2019 - Versione 3.1.0 rilasciata: opzionalità di creazione della cartella di validazione durante la suddivisione aggiunta; son state inoltre apportate piccole correzioni al codice.
 
 ### Note Finali
 Le immagini automaticamente classificate con questo programma possono essere utilizzate, ad esempio, per l'addestramento di una rete neurale in grado di riconoscere le espressioni facciali, attraverso l'uso di Keras o di quadri simili. Essendo il codice del programma liberamente fruibile, è possibile attuare delle piccole modifiche per far si che il programma possa funzionare anche in contesti totalmente differenti.
