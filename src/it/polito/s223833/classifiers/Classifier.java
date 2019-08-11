@@ -15,24 +15,25 @@ import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.CLAHE;
 import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.objdetect.Objdetect;
 
-import it.polito.s223833.MainController;
+import it.polito.s223833.Controller;
 
 public class Classifier 
 {
-	protected MainController controller;
+	protected Controller controller;
 	protected CascadeClassifier frontalFaceCascade;
 	protected Size imageSize;
 	protected String haarclassifierpath, inputFile, outputDirectory, tempDirectory;
-	protected int format = 0, absoluteFaceSize = 100, classified = 0;
+	protected int format = 0, absoluteFaceSize = 100, classified = 0, histogramEqualizationType=0;
 	protected boolean contemptState = false, surpriseState = false, grayscale = false, histogramEqualization = false, faceDetection = false, faceFound = true, subdivision = false, validation=false;
 	protected double percentage = 0, difference = 0, trainPercentage = 0, validationPercentage = 0, testPercentage = 0;
 	protected File angerDirectory = null, contemptDirectory = null, disgustDirectory = null, fearDirectory = null, happinessDirectory = null, neutralityDirectory = null, sadnessDirectory = null, surpriseDirectory = null;
-
+    CLAHE clahe;
 	/* Constructor for all database, except for Fer2013. */
-	Classifier(MainController controller, String inputFile, String outputDirectory, boolean contemptState, boolean surpriseState, int width, int height, int format, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
+	Classifier(Controller controller, String inputFile, String outputDirectory, boolean contemptState, boolean surpriseState, int width, int height, int format, boolean grayscale, boolean histogramEqualization, int histogramEqualizationType, double tileSize, double contrastLimit, boolean faceDetection, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
 		this.controller = controller;
 		this.inputFile = inputFile;
@@ -42,17 +43,22 @@ public class Classifier
 		this.format = format;
 		this.grayscale = grayscale;
 		this.histogramEqualization = histogramEqualization;
+		this.histogramEqualizationType = histogramEqualizationType;
 		this.faceDetection = faceDetection;
 		this.subdivision = subdivision;
-		this.validation=validation;
+		this.validation = validation;
 		this.trainPercentage = trainPercentage;
 		this.validationPercentage = validationPercentage;
 		this.testPercentage = testPercentage;
-
+		
 		tempDirectory = outputDirectory + "\\temp\\";
+		
+		// Instancing of the CLAHE variable.
+		clahe = Imgproc.createCLAHE(tileSize, new Size(contrastLimit, contrastLimit));
 
 		// Instancing of the variable containing the dimensions of the target image.
 		imageSize = new Size(width, height);
+		
 		// Instancing of the CascadeClassifier.
 		haarclassifierpath = System.getProperty("user.dir") + "\\lib\\";
 		frontalFaceCascade = new CascadeClassifier(haarclassifierpath + "haarcascade_frontalface_alt.xml");
@@ -73,7 +79,7 @@ public class Classifier
 	}
 
 	/* Method to update the progress bar by setting the value directly. */
-	private void UpdateBar(double value) 
+	protected void UpdateBar(double value) 
 	{
 		final double val = value;
 		Platform.runLater(() -> controller.updateProgressBar(val));
@@ -112,13 +118,25 @@ public class Classifier
 		{
 			Imgcodecs.imwrite(path + "\\" + GetFileName(fileName) + ".jp2", image);
 		}
-		// PNG.
+		// PIF.
 		else if (format == 4) 
+		{
+			if(grayscale)
+			{
+				Imgcodecs.imwrite(path + "\\" + GetFileName(fileName) + ".pgm", image);
+			}
+			else
+			{
+				Imgcodecs.imwrite(path + "\\" + GetFileName(fileName) + ".ppm", image);
+			}
+		}
+		// PNG.
+		else if (format == 5) 
 		{
 			Imgcodecs.imwrite(path + "\\" + GetFileName(fileName) + ".png", image);
 		}
 		// TIFF.
-		else if (format == 5) 
+		else if (format == 6) 
 		{
 			Imgcodecs.imwrite(path + "\\" + GetFileName(fileName) + ".tiff", image);
 		}
@@ -156,7 +174,7 @@ public class Classifier
 		} 
 		catch (SecurityException e) 
 		{
-			ExceptionManager("There was a problem while creating classification folders.");
+			ExceptionManager("There was an error while creating classification folders.");
 			return false;
 		}
 	}
@@ -192,7 +210,7 @@ public class Classifier
 		} 
 		catch (SecurityException e) 
 		{
-			ExceptionManager("There was a problem while creating classification folders.");
+			ExceptionManager("There was an error while creating classification folders.");
 			return false;
 		}
 	}
@@ -220,13 +238,13 @@ public class Classifier
 		} 
 		catch (SecurityException e) 
 		{
-			ExceptionManager("There was a problem while creating classification directories.");
+			ExceptionManager("There was an error while creating classification directories.");
 			return false;
 		}
 	}
 
 	/* Method to delete the temporary directory. */
-	protected void DeleteTempDirectory() 
+	protected boolean DeleteTempDirectory() 
 	{
 		try 
 		{
@@ -236,55 +254,13 @@ public class Classifier
 		{
 			Platform.runLater(() -> {controller.ShowErrorDialog("An error occurred while deleting temporary directories.");
 				controller.StartStopClassification(false, true);});
+			return true;
 		}
-	}
-
-	/* Method to delete the classification directories. */
-	protected void DeleteClassificationDirectories() 
-	{
-		try 
-		{
-			if (angerDirectory != null) 
-			{
-				FileUtils.deleteDirectory(angerDirectory);
-			}
-			if (contemptState == true && contemptDirectory != null) 
-			{
-				FileUtils.deleteDirectory(contemptDirectory);
-			}
-			if (disgustDirectory != null) 
-			{
-				FileUtils.deleteDirectory(disgustDirectory);
-			}
-			if (fearDirectory != null) 
-			{
-				FileUtils.deleteDirectory(fearDirectory);
-			}
-			if (happinessDirectory != null) 
-			{
-				FileUtils.deleteDirectory(happinessDirectory);
-			}
-			if (neutralityDirectory != null) 
-			{
-				FileUtils.deleteDirectory(neutralityDirectory);
-			}
-			if (sadnessDirectory != null) 
-			{
-				FileUtils.deleteDirectory(sadnessDirectory);
-			}
-			if (surpriseState == true && surpriseDirectory != null) 
-			{
-				FileUtils.deleteDirectory(surpriseDirectory);
-			}
-		} 
-		catch (IOException e) 
-		{
-			ExceptionManager("An error occurred while deleting the classification directories.");
-		}
+		return false;
 	}
 
 	/* Method to delete all directories. */
-	protected void DeleteAllDirectories() 
+	protected boolean DeleteAllDirectories() 
 	{
 		try 
 		{
@@ -294,7 +270,9 @@ public class Classifier
 		{
 			Platform.runLater(() -> {controller.ShowErrorDialog("An error occurred while deleting temporary directories.");
 				controller.StartStopClassification(false, true);});
+			return true;
 		}
+		return false;
 	}
 
 	/* Exception handling method. */
@@ -304,9 +282,22 @@ public class Classifier
 		Platform.runLater(() -> {controller.ShowErrorDialog(message);
 			controller.StartStopClassification(false, true);});
 	}
-
-	/* Method to perform the histogram equalization on the image. */
+	
+	/* Method to perform the normal or the CLA Histogram Equalization.*/
 	protected Mat HistogramEqualization(Mat image) 
+	{
+		if(histogramEqualizationType==0)
+		{
+			return NormalHistogramEqualization(image);
+		}
+		else
+		{
+			return CLAHE(image);
+		}
+	}
+
+	/* Method to perform the normal histogram equalization on the image. */
+	protected Mat NormalHistogramEqualization(Mat image) 
 	{
 		if (grayscale) 
 		{
@@ -336,21 +327,57 @@ public class Classifier
 		}
 		return image;
 	}
+	
+	/* Method to perform the Contrast Limited Adaptive Histogram Equalization on the image. */
+	protected Mat CLAHE(Mat image) 
+	{
+		if (image.channels() >= 3) 
+		{
+	        // Read the RGB color image and converts it to Lab.
+	        Mat channel = new Mat();
+	        Imgproc.cvtColor(image, image, Imgproc.COLOR_BGR2Lab);
+
+	        // Extracts the L channel.
+	        Core.extractChannel(image, channel, 0);
+
+	        // Applies the CLAHE algorithm to the L channel.
+	        clahe.apply(channel, channel);
+
+	        // Merges the color planes back into an Lab image.
+	        Core.insertChannel(channel, image, 0);
+
+	        // Converts back to RGB.
+	        Imgproc.cvtColor(image, image, Imgproc.COLOR_Lab2BGR);
+
+	        // Releases the temporary mat.
+	        channel.release();
+	    }
+	    else
+	    {
+	        // Applies the CLAHE algorithm to the L channel.
+	        clahe.apply(image, image);
+	    }		
+		return image;
+	}
 
 	/* Method to perform face detection on frontal face images. */
-	protected Mat FrontalFaceDetection(Mat image, Mat resizedFace) 
+	protected Mat FrontalFaceDetection(Mat image) 
 	{
+		Mat face = null, tempImage = new Mat();
+		
+		// Do the operations with the grayscale version of the image in order to improve performance.
+		Imgproc.cvtColor(image, tempImage, Imgproc.COLOR_BGR2GRAY);
+		
 		MatOfRect faces = new MatOfRect();
 		// Verifies the presence of frontal faces through the haar front face classifier.
-		frontalFaceCascade.detectMultiScale(image, faces, 1.1, 2, 0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(absoluteFaceSize, absoluteFaceSize), new Size());
+		frontalFaceCascade.detectMultiScale(tempImage, faces, 1.1, 2, 0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(absoluteFaceSize, absoluteFaceSize), new Size());
 
 		Rect[] facesArray = faces.toArray();
 		// If at least one face is detected, the photo will be cropped to the face itself.
 		if (facesArray.length > 0) 
 		{
 			Rect rectCrop = null;
-			// Only the first face will be saved: if an image has more faces, the others are
-			// lost.
+			// Only the first face will be saved: if an image has more faces, the others are lost.
 			if (facesArray[0].width > facesArray[0].height) 
 			{
 				rectCrop = new Rect(facesArray[0].x, facesArray[0].y, facesArray[0].width, facesArray[0].width);
@@ -358,21 +385,48 @@ public class Classifier
 			else 
 			{
 				rectCrop = new Rect(facesArray[0].x, facesArray[0].y, facesArray[0].height, facesArray[0].height);
-			}
-			// The face-only photo will be saved in a new matrix.
-			Mat face = new Mat(image, rectCrop);
-			// Scaling the photo to the desired size.
-			Imgproc.resize(face, resizedFace, imageSize);
-			// Release of the initialized variables.
-			face.release();
+			}	
+			face = new Mat(image, rectCrop);			
+			image.release();
 		} 
 		else 
 		{
 			faceFound = false;
 		}
-		// Release of the initialized variables.
+		tempImage.release();
 		faces.release();
-		return resizedFace;
+		
+		return face;
+	}
+	
+	/* Method to make an image square.*/
+	protected Mat MakeImageSquare(Mat image)
+	{
+		int diff = 0, div = 0, rst = 0;
+		// Get the difference.
+		if(image.width() >= image.height())
+		{
+			diff = image.width() - image.height();
+		}
+		else
+		{
+			diff = image.height() - image.width();
+		}
+		
+		// Calculate division and rest.
+		div = diff / 2;
+		rst = diff % 2;
+
+		// Add padding to image.
+		if(image.width() >= image.height())
+		{
+			Core.copyMakeBorder(image, image, div+rst, div, 0, 0, Core.BORDER_CONSTANT);
+		}
+		else
+		{
+			Core.copyMakeBorder(image, image, 0, 0, div+rst, div, Core.BORDER_CONSTANT);
+		}			
+		return image;
 	}
 
 	/* Method to create the training, validation and test folder and to divide the images between them. */

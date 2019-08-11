@@ -5,19 +5,18 @@ import java.io.IOException;
 
 import javafx.application.Platform;
 
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
-import it.polito.s223833.MainController;
+import it.polito.s223833.Controller;
 import it.polito.s223833.utils.UnzipClass;
 
 public class JAFFEClassifier extends Classifier implements Runnable 
 {
-	public JAFFEClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, int format, boolean histogramEqualization, boolean faceDetection, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
+	public JAFFEClassifier(Controller controller, String inputFile, String outputDirectory, int width, int height, int format, boolean histogramEqualization, int histogramEqualizationType, double tileSize, double contrastLimit, boolean faceDetection, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
-		super(controller, inputFile, outputDirectory, false, true, width, height, format, false, histogramEqualization, faceDetection, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
+		super(controller, inputFile, outputDirectory, false, true, width, height, format, false, histogramEqualization, histogramEqualizationType, tileSize, contrastLimit, faceDetection, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
 	}
 
 	@Override
@@ -36,7 +35,7 @@ public class JAFFEClassifier extends Classifier implements Runnable
 			return;
 		}
 
-		// Verifies if the user has requested the cancellation of the current operation during the extraction phase.
+		// Verify if the user has requested the cancellation of the current operation during the extraction phase.
 		if (!Thread.currentThread().isInterrupted()) 
 		{
 			// Creation of classification directories for the JAFFE database.
@@ -45,7 +44,7 @@ public class JAFFEClassifier extends Classifier implements Runnable
 				return;
 			}
 
-			Platform.runLater(() -> controller.setPhaseLabel("Phase 2: classification..."));
+			Platform.runLater(() -> controller.setPhaseLabel("Phase 2: execution of the operations chosen by the user..."));
 
 			// Reading the newly extracted photos.
 			File jaffeImages = new File(tempDirectory, "jaffe");
@@ -59,62 +58,64 @@ public class JAFFEClassifier extends Classifier implements Runnable
 				// README and .DS_Store files will be ignored.
 				if ((!file.getName().equalsIgnoreCase("README")) && (!file.getName().equalsIgnoreCase(".DS_Store"))) 
 				{
-					// Verifies that the filename has the typical form of the JAFFE database files.
+					// Verify that the filename has the typical form of the JAFFE database files.
 					if ((file.isFile()) && (file.getName().matches("[A-Z]{2}\\.[A-Z]{2}[0-9]\\.[0-9]*\\.tiff"))) 
 					{
-						faceFound = true;
-						// Open the image to be analyzed.
-						Mat image = Imgcodecs.imread(file.getAbsolutePath(), CvType.CV_8UC1), resizedFace = Mat.zeros(imageSize, CvType.CV_8UC1);
-
-						// Histogram equalization of the image (optional).
-						if (histogramEqualization) 
-						{
-							Imgproc.equalizeHist(image, image);
-						}
+						faceFound=true;
+						Mat image = Imgcodecs.imread(file.getAbsolutePath());
+						
 						// Face detection and image cropping (optional).
 						if (faceDetection) 
 						{
-							resizedFace = FrontalFaceDetection(image, resizedFace);
-						} 
-						else 
-						{
-							// Scaling the photo to the desired size.
-							Imgproc.resize(image, resizedFace, imageSize);
+							image = FrontalFaceDetection(image);
 						}
 
 						// Photo classification phase.
 						if (faceFound == true) 
 						{
+							// Resize the image.
+							Imgproc.resize(image, image, imageSize);
+							
+							// Conversion of the image in grayscale (optional).
+							if (grayscale) 
+							{
+								Imgproc.cvtColor(image, image, Imgproc.COLOR_BGR2GRAY);
+							}
+
+							// Histogram equalization of the image (optional).
+							if (histogramEqualization) 
+							{
+								image = HistogramEqualization(image);
+							}
+							
 							if (file.getName().contains("AN")) 
 							{
-								SaveImageInTheChosenFormat(angerDirectory.getAbsolutePath(), file.getName(), resizedFace);
+								SaveImageInTheChosenFormat(angerDirectory.getAbsolutePath(), file.getName(), image);
 							} 
 							else if (file.getName().contains("DI"))
 							{
-								SaveImageInTheChosenFormat(disgustDirectory.getAbsolutePath(), file.getName(), resizedFace);
+								SaveImageInTheChosenFormat(disgustDirectory.getAbsolutePath(), file.getName(), image);
 							} 
 							else if (file.getName().contains("FE")) 
 							{
-								SaveImageInTheChosenFormat(fearDirectory.getAbsolutePath(), file.getName(), resizedFace);
+								SaveImageInTheChosenFormat(fearDirectory.getAbsolutePath(), file.getName(), image);
 							} 
 							else if (file.getName().contains("HA")) 
 							{
-								SaveImageInTheChosenFormat(happinessDirectory.getAbsolutePath(), file.getName(), resizedFace);
+								SaveImageInTheChosenFormat(happinessDirectory.getAbsolutePath(), file.getName(), image);
 							} 
 							else if (file.getName().contains("NE")) 
 							{
-								SaveImageInTheChosenFormat(neutralityDirectory.getAbsolutePath(), file.getName(), resizedFace);
+								SaveImageInTheChosenFormat(neutralityDirectory.getAbsolutePath(), file.getName(), image);
 							} 
 							else if (file.getName().contains("SA")) 
 							{
-								SaveImageInTheChosenFormat(sadnessDirectory.getAbsolutePath(), file.getName(), resizedFace);
+								SaveImageInTheChosenFormat(sadnessDirectory.getAbsolutePath(), file.getName(), image);
 							} 
 							else if (file.getName().contains("SU")) 
 							{
-								SaveImageInTheChosenFormat(surpriseDirectory.getAbsolutePath(), file.getName(), resizedFace);
+								SaveImageInTheChosenFormat(surpriseDirectory.getAbsolutePath(), file.getName(), image);
 							}
-							// Release of the initialized variables.
-							resizedFace.release();
 						}
 						// Release of the initialized variables.
 						image.release();
@@ -125,7 +126,7 @@ public class JAFFEClassifier extends Classifier implements Runnable
 						return;
 					}
 				}
-				// Increase the count of the number of photos classified (or, if not classified, of the analyzed photos).
+				// Increase the count of the number of classified photos (or, if not classified, of the analyzed photos).
 				classified++;
 				// Calculation of the percentage of completion of the current operation and update of the classification progress bar.
 				percentage = (double) classified / (double) numberOfFiles;
@@ -139,14 +140,16 @@ public class JAFFEClassifier extends Classifier implements Runnable
 				Platform.runLater(() -> controller.setPhaseLabel("Phase 3: subdivision between train, validation and test folder..."));
 				if (!SubdivideImages(trainPercentage, validationPercentage, testPercentage)) 
 				{
+					ExceptionManager("There was an error while performing the subdivision.");
 					return;
 				}
 			}
 		}
+		boolean error = false;
 		// If a cancellation request has been made by the user, both temporary and classification folders will be deleted.
 		if (Thread.currentThread().isInterrupted()) 
 		{
-			DeleteAllDirectories();
+			error = DeleteAllDirectories();
 			Platform.runLater(() -> controller.ShowAttentionDialog("Classification interrupted.\n"));
 		}
 		// Otherwise only temporary ones will be deleted.
@@ -160,9 +163,12 @@ public class JAFFEClassifier extends Classifier implements Runnable
 			{
 				Platform.runLater(() -> controller.setPhaseLabel("Phase 3: deleting temporary folders..."));
 			}
-			DeleteTempDirectory();
+			error = DeleteTempDirectory();
 		}
-
-		Platform.runLater(() -> controller.StartStopClassification(false, false));
+		// Reset the buttons if no errors occured.
+		if (!error)
+		{
+			Platform.runLater(() -> controller.StartStopClassification(false, false));
+		}
 	}
 }

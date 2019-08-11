@@ -11,12 +11,12 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
-import it.polito.s223833.MainController;
+import it.polito.s223833.Controller;
 
 public class UntarClass 
 {
 	/* Method for decompressing a tar file. */
-	public void untar(MainController controller, String tarFile, String destinationDir) throws IOException 
+	public void Untar(Controller controller, String tarFile, String destinationDir) throws IOException 
 	{
 		long total = 0;
 		double percentage = 0, difference = 0;

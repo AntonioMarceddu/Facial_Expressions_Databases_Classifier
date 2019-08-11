@@ -3,20 +3,19 @@ package it.polito.s223833.classifiers;
 import java.io.File;
 import java.io.IOException;
 
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
-import it.polito.s223833.MainController;
+import it.polito.s223833.Controller;
 import it.polito.s223833.utils.UnzipClass;
 import javafx.application.Platform;
 
 public class FACESClassifier extends Classifier implements Runnable 
 {
-	public FACESClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
+	public FACESClassifier(Controller controller, String inputFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, int histogramEqualizationType, double tileSize, double contrastLimit, boolean faceDetection, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
-		super(controller, inputFile, outputDirectory, false, false, width, height, format, grayscale, histogramEqualization, faceDetection, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
+		super(controller, inputFile, outputDirectory, false, false, width, height, format, grayscale, histogramEqualization, histogramEqualizationType, tileSize, contrastLimit, faceDetection, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
 		// Minimum face size to search. Improves performance if set to a reasonable size, depending on the size of the faces of the people depicted in the database.
 		absoluteFaceSize = 1500;
 	}
@@ -37,7 +36,7 @@ public class FACESClassifier extends Classifier implements Runnable
 			return;
 		}
 
-		// Verifies if the user has requested the cancellation of the current operation during the extraction phase.
+		// Verify if the user has requested the cancellation of the current operation during the extraction phase.
 		if (!Thread.currentThread().isInterrupted()) 
 		{
 			// Creation of classification directories for the FACES database.
@@ -46,7 +45,7 @@ public class FACESClassifier extends Classifier implements Runnable
 				return;
 			}
 
-			Platform.runLater(() -> controller.setPhaseLabel("Phase 2: classification..."));
+			Platform.runLater(() -> controller.setPhaseLabel("Phase 2: execution of the operations chosen by the user..."));
 
 			// Reading the newly extracted photos.
 			File facesImages = new File(tempDirectory);
@@ -64,70 +63,66 @@ public class FACESClassifier extends Classifier implements Runnable
 			{
 				File file = listOfFiles[i];
 
-				// Verifies that the filename has the typical form of the FACES database files.
+				// Verify that the filename has the typical form of the FACES database files.
 				if ((file.isFile()) && (file.getName().matches("[0-9]{3}(_[a-z]){4}\\.jpg"))) 
 				{
-					faceFound = true;
-					// Open the image to be analyzed.
-					Mat image = Imgcodecs.imread(file.getAbsolutePath()),
-							resizedFace = Mat.zeros(imageSize, CvType.CV_8UC1);
-
-					// Conversion of the image in grayscale (optional).
-					if (grayscale) 
-					{
-						Imgproc.cvtColor(image, image, Imgproc.COLOR_BGR2GRAY);
-					}
-					// Histogram equalization of the image (optional).
-					if (histogramEqualization) 
-					{
-						image = HistogramEqualization(image);
-					}
+					faceFound=true;
+					Mat image = Imgcodecs.imread(file.getAbsolutePath());
+					
 					// Face detection and image cropping (optional).
 					if (faceDetection) 
 					{
-						resizedFace = FrontalFaceDetection(image, resizedFace);
+						image = FrontalFaceDetection(image);
 					} 
-					else 
-					{
-						// Scaling the photo to the desired size.
-						Imgproc.resize(image, resizedFace, imageSize);
-					}
-
+					
 					// Photo classification phase.
 					if (faceFound == true) 
 					{
+						// Resize the image.
+						Imgproc.resize(image, image, imageSize);
+						
+						// Conversion of the image in grayscale (optional).
+						if (grayscale) 
+						{
+							Imgproc.cvtColor(image, image, Imgproc.COLOR_BGR2GRAY);
+						}
+
+						// Histogram equalization of the image (optional).
+						if (histogramEqualization) 
+						{
+							image = HistogramEqualization(image);
+						}
+						
 						String expression = file.getName().substring(8, 9);
 						if (expression.equals("a")) 
 						{
-							SaveImageInTheChosenFormat(angerDirectory.getAbsolutePath(), file.getName(), resizedFace);
+							SaveImageInTheChosenFormat(angerDirectory.getAbsolutePath(), file.getName(), image);
 						} 
 						else if (expression.equals("d")) 
 						{
-							SaveImageInTheChosenFormat(disgustDirectory.getAbsolutePath(), file.getName(), resizedFace);
+							SaveImageInTheChosenFormat(disgustDirectory.getAbsolutePath(), file.getName(), image);
 						} 
 						else if (expression.equals("f")) 
 						{
-							SaveImageInTheChosenFormat(fearDirectory.getAbsolutePath(), file.getName(), resizedFace);
+							SaveImageInTheChosenFormat(fearDirectory.getAbsolutePath(), file.getName(), image);
 						} 
 						else if (expression.equals("h")) 
 						{
-							SaveImageInTheChosenFormat(happinessDirectory.getAbsolutePath(), file.getName(), resizedFace);
+							SaveImageInTheChosenFormat(happinessDirectory.getAbsolutePath(), file.getName(), image);
 						} 
 						else if (expression.equals("n")) 
 						{
-							SaveImageInTheChosenFormat(neutralityDirectory.getAbsolutePath(), file.getName(), resizedFace);
+							SaveImageInTheChosenFormat(neutralityDirectory.getAbsolutePath(), file.getName(), image);
 						} 
 						else if (expression.equals("s")) 
 						{
-							SaveImageInTheChosenFormat(sadnessDirectory.getAbsolutePath(), file.getName(), resizedFace);
+							SaveImageInTheChosenFormat(sadnessDirectory.getAbsolutePath(), file.getName(), image);
 						}
-						// Release of the initialized variables.
-						resizedFace.release();
 					}
-					// Release of the initialized variables.
+					// Release of the image.
 					image.release();
 
-					// Increase the count of the number of photos classified (or, if not classified, of the analyzed photos).
+					// Increase the count of the number of classified photos (or, if not classified, of the analyzed photos).
 					classified++;
 					// Calculation of the percentage of completion of the current operation and update of the classification progress bar.
 					percentage = (double) classified / (double) numberOfFiles;
@@ -147,14 +142,16 @@ public class FACESClassifier extends Classifier implements Runnable
 				Platform.runLater(() -> controller.setPhaseLabel("Phase 3: subdivision between train, validation and test folder..."));
 				if (!SubdivideImages(trainPercentage, validationPercentage, testPercentage)) 
 				{
+					ExceptionManager("There was an error while performing the subdivision.");
 					return;
 				}
 			}
 		}
+		boolean error = false;
 		// If a cancellation request has been made by the user, both temporary and classification folders will be deleted.
 		if (Thread.currentThread().isInterrupted()) 
 		{
-			DeleteAllDirectories();
+			error = DeleteAllDirectories();
 			Platform.runLater(() -> controller.ShowAttentionDialog("Classification interrupted.\n"));
 		}
 		// Otherwise only temporary ones will be deleted.
@@ -168,9 +165,12 @@ public class FACESClassifier extends Classifier implements Runnable
 			{
 				Platform.runLater(() -> controller.setPhaseLabel("Phase 3: deleting temporary folders..."));
 			}
-			DeleteTempDirectory();
+			error = DeleteTempDirectory();
 		}
-
-		Platform.runLater(() -> controller.StartStopClassification(false, false));
+		// Reset the buttons if no errors occured.
+		if (!error)
+		{
+			Platform.runLater(() -> controller.StartStopClassification(false, false));
+		}
 	}
 }

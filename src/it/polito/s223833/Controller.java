@@ -28,7 +28,7 @@ import javafx.stage.Stage;
 
 import it.polito.s223833.classifiers.*;
 
-public class MainController 
+public class Controller 
 {
 	/* JAVAFX stage. */
 	private Stage primaryStage;
@@ -51,25 +51,30 @@ public class MainController
 
 	/* FXML progressbar. */
 	@FXML
-	private ProgressBar ProgressBar;
+	private ProgressBar ProgressBar;	
 
-	/* FXML radio buttons. */
+	/* FXML radio buttons and toggle groups. */
+	@FXML
+	private RadioButton NormalHERadioButton,CLAHERadioButton;
+	
 	@FXML
 	private ToggleGroup Database, ImageFormat;
 
 	/* FXML textfields. */
 	@FXML
-	private TextField WidthTextField, HeightTextField;
+	private TextField WidthTextField, HeightTextField, TileSizeTextField, ContrastLimitTextField;
 
 	/* Variabili. */
-	private String inputFile = "", emotionFile = "", outputDirectory = "";
+	private String inputFile = "", inputFile2 = "", inputFile3 = "", outputDirectory = "";
 
 	private int format = 0;
+	
+	private double tileSize=8, contrastLimit=40;
 
 	/* Classification thread. */
 	Thread classifierThread = null;
 
-	public MainController() 
+	public Controller() 
 	{
 		primaryStage = null;
 	}
@@ -78,9 +83,9 @@ public class MainController
 	public void SetStage(Stage stage) 
 	{
 		primaryStage = stage;
-		// Implements the sliders functionality.
+		// Define the sliders functionality.
 		DefineSlidersFunctionality();
-	}
+	}	
 
 	/* Private method for defining the sliders functionality. */
 	private void DefineSlidersFunctionality() 
@@ -180,13 +185,17 @@ public class MainController
 		{
 			format = 3;
 		} 
-		else if (selectedRadioButton.getId().equals("PNGRadioButton")) 
+		else if (selectedRadioButton.getId().equals("PIFRadioButton")) 
 		{
 			format = 4;
 		} 
-		else if (selectedRadioButton.getId().equals("TIFFRadioButton")) 
+		else if (selectedRadioButton.getId().equals("PNGRadioButton")) 
 		{
 			format = 5;
+		} 
+		else if (selectedRadioButton.getId().equals("TIFFRadioButton")) 
+		{
+			format = 6;
 		}
 	}
 
@@ -217,6 +226,33 @@ public class MainController
 		{
 			ShowErrorDialog("An error occurred while opening the information window.");
 		}
+	}
+	
+	/* Public method for enabling or disabling HE options. */
+	public void EnableOrDisableHEOptions()
+	{
+		NormalHERadioButton.setDisable(!NormalHERadioButton.isDisable());
+		CLAHERadioButton.setDisable(!CLAHERadioButton.isDisable());
+		if(CLAHERadioButton.isSelected())
+		{
+			if(CLAHERadioButton.isDisable())
+			{
+				TileSizeTextField.setDisable(true); 
+				ContrastLimitTextField.setDisable(true);
+			}
+			else
+			{
+				TileSizeTextField.setDisable(false); 
+				ContrastLimitTextField.setDisable(false);
+			}
+		}
+	}
+	
+	/* Public method for enabling or disabling CLAHE options. */
+	public void EnableOrDisableCLAHEOptions()
+	{
+		TileSizeTextField.setDisable(!TileSizeTextField.isDisable()); 
+		ContrastLimitTextField.setDisable(!ContrastLimitTextField.isDisable());
 	}
 
 	/* Public method for enabling or disabling the sliders. */
@@ -279,51 +315,64 @@ public class MainController
 	public void ChooseInputFile() 
 	{
 		RadioButton selectedRadioButton = (RadioButton) Database.getSelectedToggle();
-
 		File databaseFile = null;
 
 		// CK+.
 		if (selectedRadioButton.getId().equals("CKRadioButton")) 
 		{
-			databaseFile = CreateInputFileChooser("For the CK+ database classification, you must choose the file containing the database images (extended-cohn-kanade-images.zip) and the file containing the emotions labels (Emotion_labels.zip).","Choose CK+ database images file", "CK+ database images file", "extended-cohn-kanade-images.zip");
+			databaseFile = CreateInputFileChooser(true, "For the classification of the CK+ database, you must choose the files containing the database images (extended-cohn-kanade-images.zip) and the file containing the emotions labels (Emotion_labels.zip).","Choose CK+ database images file", "extended-cohn-kanade-images.zip");
 			if (databaseFile != null) 
 			{
-				FileChooser emotionFileChooser = new FileChooser();
-				emotionFileChooser.setTitle("Choose CK+ emotion labels file");
-				emotionFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-				emotionFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CK+ emotion labels file", "Emotion_labels.zip"));
-				File file = emotionFileChooser.showOpenDialog(primaryStage);
-				if (file != null) 
+				File emotionFile = CreateInputFileChooser(false, "", "Choose CK+ emotion labels file", "Emotion_labels.zip");
+				if (emotionFile != null) 
 				{
-					emotionFile = file.getPath();
+					inputFile2 = emotionFile.getPath();
 				}
 			}
 		}
 		// FACES.
 		else if (selectedRadioButton.getId().equals("FACESRadioButton")) 
 		{
-			databaseFile = CreateInputFileChooser("For the FACES database classification, you must choose the file containing the database images, that has this format: DDD_MMM_DD_hh-mm-ss_CEST_YYYY.zip.", "Choose FACES database images file", "FACES database images file", "*.zip");
+			databaseFile = CreateInputFileChooser(true, "For the classification of the FACES database, you must choose the file containing the database images, that has this format: DDD_MMM_DD_hh-mm-ss_CEST_YYYY.zip.", "Choose FACES database images file", "*.zip");
 		}
 		// FER2013.
 		else if (selectedRadioButton.getId().equals("FER2013RadioButton")) 
 		{
-			databaseFile = CreateInputFileChooser("For the FER2013 database classification, you must choose the file containing the database images (fer2013.csv).","Choose FER2013 database images file", "FER2013 database images file", "fer2013.csv");
+			databaseFile = CreateInputFileChooser(true, "For the classification of the FER2013 database, you must choose the file containing the database images (fer2013.csv).","Choose FER2013 database images file", "fer2013.csv");
 		}
 		// JAFFE.
 		else if (selectedRadioButton.getId().equals("JAFFERadioButton")) 
 		{
-			databaseFile = CreateInputFileChooser("For the JAFFE database classification, you must choose the file containing the database images (jaffedbase.zip).","Choose JAFFE database images file", "JAFFE database images file", "jaffedbase.zip");
+			databaseFile = CreateInputFileChooser(true, "For the classification of the JAFFE database, you must choose the file containing the database images (jaffedbase.zip).","Choose JAFFE database images file", "jaffedbase.zip");
 		}
 		// MUG.
 		else if (selectedRadioButton.getId().equals("MUGRadioButton")) 
 		{
-			databaseFile = CreateInputFileChooser("For the MUG database classification, you must choose the file containing the manual annotated files (manual.tar).","Choose manual MUG database annotation file", "Manual MUG database annotation file", "manual.tar");
+			databaseFile = CreateInputFileChooser(true, "For the classification of the MUG database, you must choose the file containing the manual annotated files (manual.tar).","Choose MUG database images file manually annotated", "manual.tar");
 		}
 		// RaFD.
 		else if (selectedRadioButton.getId().equals("RaFDRadioButton")) 
 		{
-			databaseFile = CreateInputFileChooser("For the RaFD database classification, you must choose the file containing the database images (RafDDownload-*.zip).","Choose RaFD database image file", "RaFD database image file", "RafDDownload-*.zip");
+			databaseFile = CreateInputFileChooser(true, "For the classification of the RaFD database, you must choose the file containing the database images (RafDDownload-*.zip).","Choose RaFD database images file", "RafDDownload-*.zip");
 		}
+		// SFEW 2.0.
+		else if (selectedRadioButton.getId().equals("SFEW20RadioButton")) 
+		{
+			databaseFile = CreateInputFileChooser(true, "For the classification of the SFEW 2.0 database, you must choose the files containing the images for the train (Train_Aligned_Faces.zip), validation (Val_Aligned_Faces_new.zip) and test (Test_Aligned_Faces.zip).","Choose SFEW 2.0 train database image file", "Train_Aligned_Faces.zip");
+			if (databaseFile != null) 
+			{
+				File validationFile = CreateInputFileChooser(false, "", "Choose SFEW 2.0 validation database images file", "Val_Aligned_Faces_new.zip");
+				if (validationFile != null) 
+				{
+					inputFile2 = validationFile.getPath();
+					File testFile = CreateInputFileChooser(false, "", "Choose SFEW 2.0 test database images file", "Test_Aligned_Faces.zip");
+					if (testFile != null) 
+					{
+						inputFile3 = testFile.getPath();
+					}
+				}
+			}
+		}	
 
 		if (databaseFile != null) 
 		{
@@ -332,13 +381,16 @@ public class MainController
 	}
 
 	/* Private method for creating an input file chooser. */
-	private File CreateInputFileChooser(String informationDialogText, String informationDialogTitle, String extensionName, String extension) 
+	private File CreateInputFileChooser(boolean showInformationDialog, String informationDialogText, String informationDialogTitle, String extension) 
 	{
-		showInformationDialog(informationDialogText);
+		if(showInformationDialog)
+		{
+			showInformationDialog(informationDialogText);	
+		}
 		FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle(informationDialogTitle);
 		fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(extensionName, extension));
+		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(extension, extension));
 		return fileChooser.showOpenDialog(primaryStage);
 	}
 
@@ -379,17 +431,17 @@ public class MainController
 	/* Public method called by the "Classify" button. */
 	public void Classify() 
 	{
-		// Verifies that the user has chosen an existing input file and output folder.
+		// Verify that the user has chosen an existing input file and output folder.
 		if ((inputFile != "") && (outputDirectory != "")) 
 		{
 			File databaseFile = new File(inputFile);
 			File outputDir = new File(outputDirectory);
 			if ((databaseFile.exists()) && (outputDir.exists())) 
 			{
-				// Verifies that the output folder is empty.
+				// Verify that the output folder is empty.
 				if (outputDir.list().length == 0) 
 				{
-					// Verifies that the user has chosen the width and height values for the output photos.
+					// Verify that the user has chosen the width and height values for the output photos.
 					if ((!WidthTextField.getText().isEmpty()) && (!HeightTextField.getText().isEmpty())) 
 					{
 						int width = 0, height = 0;
@@ -403,9 +455,38 @@ public class MainController
 							ShowErrorDialog("The width and the height must be integers.");
 							return;
 						}
-						// Verifies that the width and height values entered are between 32 and 1024.
+						// Verify that the width and height values entered are between 32 and 1024.
 						if (width >= 32 && width <= 1024 && height >= 32 && height <= 1024) 
 						{
+							int histogramEqualizationType=0;
+							// If the CLAHE option has been selected, check if the user has chosen the tile size and the contrast limit values.
+							if(CLAHERadioButton.isSelected())
+							{
+								//Set the histogram equalization type to CLAHE.
+								histogramEqualizationType=1;
+								// Get the tile size.
+								try
+								{
+									tileSize=Double.parseDouble(TileSizeTextField.getText());
+								}
+								catch(NumberFormatException|NullPointerException e)
+								{
+									ShowAttentionDialog("The value that has been given for the tile size is not a double or is empty. It will be set to the default value (2).");
+									tileSize=2;
+								}
+								// Get the contrast limit.
+								try
+								{
+									contrastLimit=Double.parseDouble(ContrastLimitTextField.getText());
+								}
+								catch(NumberFormatException| NullPointerException e)
+								{
+									ShowAttentionDialog("The value that has been given for the contrast limit is not a double or is empty. It will be set to the default value (4).");
+									contrastLimit=4;
+								}
+							}
+							
+							
 							boolean classify = false;
 							
 							// Get the validation value.
@@ -421,14 +502,14 @@ public class MainController
 							// CK + classifier.
 							if (selectedRadioButton.getId().equals("CKRadioButton")) 
 							{
-								// Verifies that the user has chosen the correct files previously.
-								if ((inputFile.contains("extended-cohn-kanade-images.zip"))	&& (emotionFile.contains("Emotion_labels.zip"))) 
+								// Verify that the user has chosen the correct files previously.
+								if ((inputFile.contains("extended-cohn-kanade-images.zip"))	&& (inputFile2.contains("Emotion_labels.zip"))) 
 								{
-									File emotionFileTest = new File(emotionFile);
-									// Verifies that the file containing the emotion labels exists.
+									File emotionFileTest = new File(inputFile2);
+									// Verify that the file containing the emotion labels exists.
 									if (emotionFileTest.exists()) 
 									{
-										CKClassifier classifier = new CKClassifier(this, inputFile, emotionFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+										CKClassifier classifier = new CKClassifier(this, inputFile, inputFile2, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), histogramEqualizationType, tileSize, contrastLimit, FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 										classifierThread = new Thread(classifier);
 										classify = true;
 									} 
@@ -439,7 +520,7 @@ public class MainController
 								} 
 								else 
 								{
-									ShowAttentionDialog("For the CK+ database classification, you must choose the file containing the database images (extended-cohn-kanade-images.zip) and the file containing the emotion labels (Emotion_labels.zip).");
+									ShowAttentionDialog("For the CK+ database classification, you must choose the files containing the database images (extended-cohn-kanade-images.zip) and the file containing the emotion labels (Emotion_labels.zip).");
 								}
 							}
 							// FACES classifier.
@@ -448,7 +529,7 @@ public class MainController
 								// Verifies that the user has chosen the correct files previously.
 								if (inputFile.substring(inputFile.lastIndexOf('\\') + 1).matches("([a-zA-Z]{3}_){2}[0-9]{2}_[0-9]{2}(-[0-9]{2}){2}_CEST_[0-9]{4}\\.zip")) 
 								{
-									FACESClassifier classifier = new FACESClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+									FACESClassifier classifier = new FACESClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), histogramEqualizationType, tileSize, contrastLimit, FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 									classifierThread = new Thread(classifier);
 									classify = true;
 								} 
@@ -460,10 +541,13 @@ public class MainController
 							// FER2013 classifier.
 							else if (selectedRadioButton.getId().equals("FER2013RadioButton")) 
 							{
-								// Verifies that the user has chosen the correct files previously.
+								// Verify that the user has chosen the correct files previously.
 								if (inputFile.contains("fer2013.csv")) 
 								{
 									FER2013Classifier classifier = null;
+									String ferPlusPath = "";
+									boolean defaultSubdivision = false, ferPlus = false;
+									
 									if (format == 0) 
 									{
 										ShowAttentionDialog("The FER2013 Database has not a default format: will be set as default format JPEG.");
@@ -471,35 +555,48 @@ public class MainController
 									}
 									if (GrayscaleCheckBox.isSelected()) 
 									{
-										ShowAttentionDialog("The FER2013 Database is already a grayscale database: grayscale option will be ignored.");
+										ShowAttentionDialog("The FER2013 Database is already in grayscale: this option will be ignored.");
 									}
 									if (FaceDetectionCheckBox.isSelected()) 
 									{
-										ShowAttentionDialog("The FER2013 Database has very low quality images (48x48): face detection option will be ignored.");
+										ShowAttentionDialog("The FER2013 Database has very low resolution images (48x48): face detection option will be ignored.");
 									}
-									if (EnableSubdivisionCheckBox.isSelected()) 
+									if (!EnableSubdivisionCheckBox.isSelected()) 
 									{
-										classifier = new FER2013Classifier(this, inputFile, outputDirectory, width, height, format, HistogramEqualizationCheckBox.isSelected(), false, true, validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
-									} 
-									else 
-									{
-										boolean defaultSubdivision=false;
 										Alert alert = new Alert(AlertType.CONFIRMATION);
 										alert.setTitle("Facial Expression Database Classificator");
 										alert.setHeaderText("Request");
-										alert.setContentText("The FER2013 has a field for an automatic subdivision of images between training, validation and test datasets. Do you want to use it to split images in this way?");
+										alert.setContentText("The FER2013 has a field for an automatic subdivision of images between training, validation and test datasets. Do you want FEDC to use it to split images in this way?");
 										((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText("Yes");
 										((Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("No");
-
 										Optional<ButtonType> option = alert.showAndWait();
 
 										if (option.get() == ButtonType.OK) 
 										{
 											defaultSubdivision=true;
 										} 
-										classifier = new FER2013Classifier(this, inputFile, outputDirectory, width, height, format, HistogramEqualizationCheckBox.isSelected(), defaultSubdivision, false, validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
-
 									}
+									
+									Alert alert = new Alert(AlertType.CONFIRMATION);
+									alert.setTitle("Facial Expression Database Classificator");
+									alert.setHeaderText("Request");
+									alert.setContentText("FEDC can use the FER+ annotations, freely downloadable from https://github.com/microsoft/FERPlus; these annotations improves the default ones. Do you want FEDC to use them to classify images?");
+									((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText("Yes");
+									((Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("No");
+									Optional<ButtonType> option = alert.showAndWait();
+
+									if (option.get() == ButtonType.OK) 
+									{
+										File ferPlusFile = CreateInputFileChooser(false, "", "Choose FER+ annotations file", "fer2013new.csv");
+										
+										if (ferPlusFile != null) 
+										{
+											ferPlusPath=ferPlusFile.getAbsolutePath();
+											ferPlus = true;
+										}
+									} 
+									
+									classifier = new FER2013Classifier(this, inputFile, outputDirectory, width, height, format, ferPlus, ferPlusPath, HistogramEqualizationCheckBox.isSelected(), histogramEqualizationType, tileSize, contrastLimit, defaultSubdivision, EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 									classifierThread = new Thread(classifier);
 									classify = true;
 								} 
@@ -511,14 +608,14 @@ public class MainController
 							// JAFFE classifier.
 							else if (selectedRadioButton.getId().equals("JAFFERadioButton")) 
 							{
-								// Verifies that the user has chosen the correct files previously.
+								// Verify that the user has chosen the correct files previously.
 								if (inputFile.contains("jaffedbase.zip")) 
 								{
 									if (GrayscaleCheckBox.isSelected()) 
 									{
-										ShowAttentionDialog("The JAFFE Database is already a grayscale database: grayscale option will be ignored.");
+										ShowAttentionDialog("The JAFFE Database is already in grayscale: this option will be ignored.");
 									}
-									JAFFEClassifier classifier = new JAFFEClassifier(this, inputFile, outputDirectory, width, height, format, HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+									JAFFEClassifier classifier = new JAFFEClassifier(this, inputFile, outputDirectory, width, height, format, HistogramEqualizationCheckBox.isSelected(), histogramEqualizationType, tileSize, contrastLimit, FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 									classifierThread = new Thread(classifier);
 									classify = true;
 								} 
@@ -530,10 +627,10 @@ public class MainController
 							// MUG classifier.
 							else if (selectedRadioButton.getId().equals("MUGRadioButton")) 
 							{
-								// Verifies that the user has chosen the correct files previously.
+								// Verify that the user has chosen the correct files previously.
 								if (inputFile.contains("manual.tar")) 
 								{
-									MUGClassifier classifier = new MUGClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+									MUGClassifier classifier = new MUGClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), histogramEqualizationType, tileSize, contrastLimit, FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 									classifierThread = new Thread(classifier);
 									classify = true;
 								} 
@@ -545,40 +642,92 @@ public class MainController
 							// RaFD classifier.
 							else if (selectedRadioButton.getId().equals("RaFDRadioButton")) 
 							{
-								// Verifies that the user has chosen the correct files previously.
+								// Verify that the user has chosen the correct files previously.
 								if (inputFile.contains("RafDDownload-")) 
 								{
 									RaFDClassifier classifier = null;
+									boolean profileImages = false;
 									if (FaceDetectionCheckBox.isSelected()) 
 									{
 										Alert alert = new Alert(AlertType.CONFIRMATION);
 										alert.setTitle("Facial Expression Database Classificator");
 										alert.setHeaderText("Request");
-										alert.setContentText("The RaFD database contains also non-frontal images. Do you want to try to classify it with the haar classifier for profiles? The result will not be optimal as with the frontal images.");
+										alert.setContentText("The RaFD database also contains non-frontal images. Do you want FEDC to try to classify them with the haar classifier for profiles? The result is not guaranteed to be optimal as it is for frontal images.");
 										((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText("Yes");
 										((Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("No");
-
 										Optional<ButtonType> option = alert.showAndWait();
 
 										if (option.get() == ButtonType.OK) 
 										{
-											classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), true, EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+											profileImages = true;
 										} 
-										else 
-										{
-											classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), false, EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
-										}
 									} 
-									else 
-									{
-										classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), FaceDetectionCheckBox.isSelected(), false, EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
-									}
+									classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), histogramEqualizationType, tileSize, contrastLimit, FaceDetectionCheckBox.isSelected(), profileImages, EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 									classifierThread = new Thread(classifier);
 									classify = true;
 								} 
 								else 
 								{
 									ShowAttentionDialog("For the RaFD database classification, you must choose the file containing the database images (RafDDownload-*.zip).");
+								}
+							}
+							// SFEW 2.0 classifier.
+							else if (selectedRadioButton.getId().equals("SFEW20RadioButton")) 
+							{
+								// Verify that the user has chosen the correct files previously.
+								if ((inputFile.contains("Train_Aligned_Faces.zip")) && (inputFile2.contains("Val_Aligned_Faces_new.zip") && (inputFile3.contains("Test_Aligned_Faces.zip")))) 
+								{
+									boolean defaultSubdivision = false, removeBadImages = false, squareImages = false;
+									if (FaceDetectionCheckBox.isSelected()) 
+									{
+										ShowAttentionDialog("The SFEW 2.0 database, in the \"aligned faces\" .zips, has images already cutted to the face only: The \"Face Detection and Cut\" option will be ignored.");
+									}
+									if (!EnableSubdivisionCheckBox.isSelected()) 
+									{
+										Alert alert = new Alert(AlertType.CONFIRMATION);
+										alert.setTitle("Facial Expression Database Classificator");
+										alert.setHeaderText("Request");
+										alert.setContentText("The SFEW 2.0 database has a predefined subdivision of images between training, validation and test datasets. Do you want FEDC to use the same subdivision?");
+										((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText("Yes");
+										((Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("No");
+										Optional<ButtonType> option = alert.showAndWait();
+
+										if (option.get() == ButtonType.OK) 
+										{
+											defaultSubdivision=true;
+										} 
+									}
+									
+									// Alert for removing bad images.
+									Alert alert = new Alert(AlertType.CONFIRMATION);
+									alert.setTitle("Facial Expression Database Classificator");
+									alert.setHeaderText("Request");
+									alert.setContentText("The SFEW 2.0 database has some images that do not represent human faces or that have a wrong cut. Do you want FEDC to remove them automatically?");
+									((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText("Yes");
+									((Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("No");
+									Optional<ButtonType> option1 = alert.showAndWait();
+
+									if (option1.get() == ButtonType.OK) 
+									{
+										removeBadImages = true;
+									} 
+									
+									// Alert for make square images.
+									alert.setContentText("The SFEW 2.0 database has non-squared images. Do you want FEDC to make them squared?");
+									Optional<ButtonType> option2 = alert.showAndWait();
+
+									if (option2.get() == ButtonType.OK) 
+									{
+										squareImages = true;
+									}
+									
+									SFEW20Classifier classifier = new SFEW20Classifier(this, inputFile, inputFile2, inputFile3, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), histogramEqualizationType, tileSize, contrastLimit, removeBadImages, squareImages, defaultSubdivision, EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+									classifierThread = new Thread(classifier);
+									classify = true;
+								}
+								else
+								{
+									ShowAttentionDialog("For the classification of the SFEW 2.0 database, you must choose the files containing the images for the train (Train_Aligned_Faces.zip), validation (Val_Aligned_Faces_new.zip) and test (Test_Aligned_Faces.zip).");
 								}
 							}
 							// If the classify variable is true, then the classification thread will be started.
@@ -605,7 +754,7 @@ public class MainController
 			} 
 			else 
 			{
-				ShowErrorDialog("The input file and/or the output folder does not exist.");
+				ShowErrorDialog("The input file and/or the output folder does not exist/s.");
 			}
 		} 
 		else 
@@ -620,8 +769,7 @@ public class MainController
 		// Clearing the classification progress bar.
 		updateProgressBar(0);
 		ProgressBarLabel.setText("0%");
-		// Cross enabling-disabling the classification button and the early termination
-		// button of the classification.
+		// Cross enabling-disabling the classification button and the early termination button of the classification.
 		ClassifyButton.setDisable(value);
 		AbortClassificationButton.setDisable(!value);
 		if (error) 

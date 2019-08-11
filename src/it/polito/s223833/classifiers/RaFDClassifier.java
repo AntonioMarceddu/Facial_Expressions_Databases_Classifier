@@ -5,7 +5,6 @@ import java.io.IOException;
 
 import javafx.application.Platform;
 
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
@@ -15,7 +14,7 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.objdetect.Objdetect;
 
-import it.polito.s223833.MainController;
+import it.polito.s223833.Controller;
 import it.polito.s223833.utils.UnzipClass;
 
 public class RaFDClassifier extends Classifier implements Runnable 
@@ -23,11 +22,9 @@ public class RaFDClassifier extends Classifier implements Runnable
 	private CascadeClassifier profileFaceCascade;
 	private boolean profile;
 
-	public RaFDClassifier(MainController controller, String inputFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean profile, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
+	public RaFDClassifier(Controller controller, String inputFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, int histogramEqualizationType, double tileSize, double contrastLimit, boolean faceDetection, boolean profile, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
-		super(controller, inputFile, outputDirectory, true, true, width, height, format, grayscale, histogramEqualization, faceDetection, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
-		// Minimum face size to search. Improves performance if set to a reasonable size, depending on the size of the faces of the people depicted in the database.
-		absoluteFaceSize = 350;
+		super(controller, inputFile, outputDirectory, true, true, width, height, format, grayscale, histogramEqualization, histogramEqualizationType, tileSize, contrastLimit, faceDetection, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
 		// Search for profile photos.
 		this.profile = profile;
 		profileFaceCascade = new CascadeClassifier(haarclassifierpath + "haarcascade_profileface.xml");
@@ -58,7 +55,7 @@ public class RaFDClassifier extends Classifier implements Runnable
 				return;
 			}
 
-			Platform.runLater(() -> controller.setPhaseLabel("Phase 2: classification..."));
+			Platform.runLater(() -> controller.setPhaseLabel("Phase 2: execution of the operations chosen by the user..."));
 
 			// Reading the newly extracted photos.
 			File rafdImages = new File(tempDirectory);
@@ -72,43 +69,34 @@ public class RaFDClassifier extends Classifier implements Runnable
 				// Verifies that the filename has the typical form of the RaFD database files.
 				if ((file.isFile())	&& (file.getName().matches("Rafd[0-9]{3}_[0-9]{2}_[A-Z][a-z]*_[a-z]*_[a-z]*_[a-z]*\\.jpg"))) 
 				{
-					faceFound = true;
-					// Open the image to be analyzed.
-					Mat image = Imgcodecs.imread(file.getAbsolutePath()), resizedFace = Mat.zeros(imageSize, CvType.CV_8UC1);
-
-					// Conversion of the image in grayscale (optional).
-					if (grayscale) 
-					{
-						Imgproc.cvtColor(image, image, Imgproc.COLOR_BGR2GRAY);
-					}
-					// Histogram equalization of the image (optional).
-					if (histogramEqualization) 
-					{
-						image = HistogramEqualization(image);
-					}
+					faceFound=true;
+					Mat image = Imgcodecs.imread(file.getAbsolutePath()), tempImage = new Mat(), face = new Mat();
+					
+					Imgproc.cvtColor(image, tempImage, Imgproc.COLOR_BGR2GRAY);
+					
 					// Face detection and image cropping (optional).
 					if (faceDetection) 
 					{
+						// Minimum face size to search.
+						absoluteFaceSize = 325;
 						MatOfRect faces = new MatOfRect();
 						// Verifies the presence of frontal faces through the haar front face classifier.
-						frontalFaceCascade.detectMultiScale(image, faces, 1.1, 2, 0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(absoluteFaceSize, absoluteFaceSize), new Size());
-
+						frontalFaceCascade.detectMultiScale(tempImage, faces, 1.1, 2, 0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(absoluteFaceSize, absoluteFaceSize), new Size());
 						Rect[] facesArray = faces.toArray();
+						
 						// In the case that no frontal faces are detected and the user has chosen to also use the profile photo classifier, then any profile photos will be searched.
 						if (facesArray.length == 0) 
 						{
 							if (profile == true) 
 							{
+								// Minimum face size to search.
+								absoluteFaceSize = 500;
 								// Verifies the presence of profile faces through the haar profile face classifier.
-								profileFaceCascade.detectMultiScale(image, faces, 1.1, 2, 0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(absoluteFaceSize, absoluteFaceSize), new Size());
+								profileFaceCascade.detectMultiScale(tempImage, faces, 1.1, 2, 0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(absoluteFaceSize, absoluteFaceSize), new Size());
 								facesArray = faces.toArray();
-								// If no front or profile face is detected, the faceFound variable will be set to false.
-								if (facesArray.length == 0) 
-								{
-									faceFound = false;
-								}
 							} 
-							else 
+							// If no front or profile face is detected, the faceFound variable will be set to false.
+							if (profile == false || facesArray.length == 0) 
 							{
 								faceFound = false;
 							}
@@ -125,65 +113,72 @@ public class RaFDClassifier extends Classifier implements Runnable
 							else 
 							{
 								rectCrop = new Rect(facesArray[0].x, facesArray[0].y, facesArray[0].height, facesArray[0].height);
-							}
-							// The face-only photo will be saved in a new matrix.
-							Mat face = new Mat(image, rectCrop);
-							// Scaling the photo to the desired size.
-							Imgproc.resize(face, resizedFace, imageSize);
-							// Release of the initialized variables.
-							face.release();
+							}							
+							face = new Mat(image, rectCrop);		
+							image.release();	
+							image = face;						
 						}
-						// Release of the initialized variables.
+						// Release of the image.
 						faces.release();
 					} 
-					else 
-					{
-						// Scaling the photo to the desired size.
-						Imgproc.resize(image, resizedFace, imageSize);
-					}
+					// Release of the image.
+					tempImage.release();
 
 					// Photo classification phase.
 					if (faceFound == true) 
 					{
+						// Resize the image.
+						Imgproc.resize(image, image, imageSize);
+						
+						// Conversion of the image in grayscale (optional).
+						if (grayscale) 
+						{
+							Imgproc.cvtColor(image, image, Imgproc.COLOR_BGR2GRAY);
+						}
+
+						// Histogram equalization of the image (optional).
+						if (histogramEqualization) 
+						{
+							image = HistogramEqualization(image);
+						}
+						
 						if (file.getName().contains("angry")) 
 						{
-							SaveImageInTheChosenFormat(angerDirectory.getAbsolutePath(), file.getName(), resizedFace);
+							SaveImageInTheChosenFormat(angerDirectory.getAbsolutePath(), file.getName(), image);
 						} 
 						else if (file.getName().contains("contempt")) 
 						{
-							SaveImageInTheChosenFormat(contemptDirectory.getAbsolutePath(), file.getName(), resizedFace);
+							SaveImageInTheChosenFormat(contemptDirectory.getAbsolutePath(), file.getName(), image);
 						} 
 						else if (file.getName().contains("disgusted")) 
 						{
-							SaveImageInTheChosenFormat(disgustDirectory.getAbsolutePath(), file.getName(), resizedFace);
+							SaveImageInTheChosenFormat(disgustDirectory.getAbsolutePath(), file.getName(), image);
 						} 
 						else if (file.getName().contains("fearful")) 
 						{
-							SaveImageInTheChosenFormat(fearDirectory.getAbsolutePath(), file.getName(), resizedFace);
+							SaveImageInTheChosenFormat(fearDirectory.getAbsolutePath(), file.getName(), image);
 						} 
 						else if (file.getName().contains("happy")) 
 						{
-							SaveImageInTheChosenFormat(happinessDirectory.getAbsolutePath(), file.getName(), resizedFace);
+							SaveImageInTheChosenFormat(happinessDirectory.getAbsolutePath(), file.getName(), image);
 						} 
 						else if (file.getName().contains("neutral")) 
 						{
-							SaveImageInTheChosenFormat(neutralityDirectory.getAbsolutePath(), file.getName(), resizedFace);
+							SaveImageInTheChosenFormat(neutralityDirectory.getAbsolutePath(), file.getName(), image);
 						} 
 						else if (file.getName().contains("sad")) 
 						{
-							SaveImageInTheChosenFormat(sadnessDirectory.getAbsolutePath(), file.getName(), resizedFace);
+							SaveImageInTheChosenFormat(sadnessDirectory.getAbsolutePath(), file.getName(), image);
 						} 
 						else if (file.getName().contains("surprised")) 
 						{
-							SaveImageInTheChosenFormat(surpriseDirectory.getAbsolutePath(), file.getName(), resizedFace);
+							SaveImageInTheChosenFormat(surpriseDirectory.getAbsolutePath(), file.getName(), image);
 						}
-						// Release of the initialized variables.
-						resizedFace.release();
 					}
-					// Release of the initialized variables.
+					// Release of the image.
 					image.release();
 
-					// Increase the count of the number of photos classified (or, if not classified, of the analyzed photos).
+					// Increase the count of the number of classified photos (or, if not classified, of the analyzed photos).
 					classified++;
 					// Calculation of the percentage of completion of the current operation and update of the classification progress bar.
 					percentage = (double) classified / (double) numberOfFiles;
@@ -203,14 +198,16 @@ public class RaFDClassifier extends Classifier implements Runnable
 				Platform.runLater(() -> controller.setPhaseLabel("Phase 3: subdivision between train, validation and test folder..."));
 				if (!SubdivideImages(trainPercentage, validationPercentage, testPercentage)) 
 				{
+					ExceptionManager("There was an error while performing the subdivision.");
 					return;
 				}
 			}
 		}
+		boolean error = false;
 		// If a cancellation request has been made by the user, both temporary and classification folders will be deleted.
 		if (Thread.currentThread().isInterrupted()) 
 		{
-			DeleteAllDirectories();
+			error = DeleteAllDirectories();
 			Platform.runLater(() -> controller.ShowAttentionDialog("Classification interrupted.\n"));
 		}
 		// Otherwise only temporary ones will be deleted.
@@ -224,9 +221,12 @@ public class RaFDClassifier extends Classifier implements Runnable
 			{
 				Platform.runLater(() -> controller.setPhaseLabel("Phase 3: deleting temporary folders..."));
 			}
-			DeleteTempDirectory();
+			error = DeleteTempDirectory();
 		}
-
-		Platform.runLater(() -> controller.StartStopClassification(false, false));
+		// Reset the buttons if no errors occured.
+		if (!error)
+		{
+			Platform.runLater(() -> controller.StartStopClassification(false, false));
+		}
 	}
 }

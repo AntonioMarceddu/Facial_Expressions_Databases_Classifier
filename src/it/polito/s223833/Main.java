@@ -31,7 +31,7 @@ public class Main extends Application
 			primaryStage.show();
 
 			// Loading the controller.
-			MainController controller = loader.getController();
+			Controller controller = loader.getController();
 			controller.SetStage(primaryStage);
 
 			// Ensure proper thread closings when exiting the program.

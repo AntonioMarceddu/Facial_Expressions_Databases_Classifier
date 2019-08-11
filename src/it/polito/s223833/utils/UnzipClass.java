@@ -12,12 +12,12 @@ import java.util.zip.ZipInputStream;
 
 import javafx.application.Platform;
 
-import it.polito.s223833.MainController;
+import it.polito.s223833.Controller;
 
 public class UnzipClass 
 {
 	/* Method for decompressing a zip file. */
-	public void Unzip(MainController controller, String zipFile, String destinationDir) throws IOException 
+	public void Unzip(Controller controller, String zipFile, String destinationDir) throws IOException 
 	{
 		long total = 0, uncompressed = 0;
 		double percentage = 0, difference = 0;

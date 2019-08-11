@@ -7,23 +7,22 @@ import java.io.IOException;
 
 import javafx.application.Platform;
 
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
-import it.polito.s223833.MainController;
+import it.polito.s223833.Controller;
 import it.polito.s223833.utils.UnzipClass;
 
 public class CKClassifier extends Classifier implements Runnable 
 {
 	private String emotionFile;
 
-	public CKClassifier(MainController controller, String inputFile, String emotionFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, boolean faceDetection, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
+	public CKClassifier(Controller controller, String inputFile, String emotionFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, int histogramEqualizationType, double tileSize, double contrastLimit, boolean faceDetection, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
-		super(controller, inputFile, outputDirectory, true, true, width, height, format, grayscale, histogramEqualization, faceDetection, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
+		super(controller, inputFile, outputDirectory, true, true, width, height, format, grayscale, histogramEqualization, histogramEqualizationType, tileSize, contrastLimit, faceDetection, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
 		// Minimum face size to search. Improves performance if set to a reasonable size, depending on the size of the faces of the people depicted in the database.
-		absoluteFaceSize = 150;
+		absoluteFaceSize = 200;
 		// Emotion file.
 		this.emotionFile = emotionFile;
 	}
@@ -46,12 +45,12 @@ public class CKClassifier extends Classifier implements Runnable
 			return;
 		}
 
-		// Verifies if the user has requested the cancellation of the current operation during the extraction phase.
+		// Verify if the user has requested the cancellation of the current operation during the extraction phase.
 		if (!Thread.currentThread().isInterrupted()) 
 		{
 			File inputFolder;
 			File[] listOfExternalFolders;
-			int i = 0, j = 0, numberOfExternalFolders, numberOfInternalFolders;
+			int i = 0, j = 0;
 			boolean neutralTaken;
 
 			// Creation of classification directories for the CK+ database.
@@ -60,21 +59,19 @@ public class CKClassifier extends Classifier implements Runnable
 				return;
 			}
 
-			Platform.runLater(() -> controller.setPhaseLabel("Phase 3: classification..."));
+			Platform.runLater(() -> controller.setPhaseLabel("Phase 3: execution of the operations chosen by the user..."));
 
 			// Reading of the files in the emotions folder.
 			inputFolder = new File(tempDirectory, "emotion");
 			listOfExternalFolders = inputFolder.listFiles();
-			numberOfExternalFolders = listOfExternalFolders.length;
 
 			// Cycle performed for each individual external folder.
-			for (i = 0; i < numberOfExternalFolders; i++) 
+			for (i = 0; i < listOfExternalFolders.length; i++) 
 			{
 				File externalFolder = listOfExternalFolders[i];
 				File[] listOfInternalFolders = externalFolder.listFiles();
-				numberOfInternalFolders = listOfInternalFolders.length;
 
-				// Verifies that the folders start with an S followed by a sequence of three numbers.
+				// Verify that the folders start with an S followed by a sequence of three numbers.
 				if (!externalFolder.getName().matches("S[0-9]{3}")) 
 				{
 					ExceptionManager("The format of the folders in the input file is not the one expected.");
@@ -84,12 +81,12 @@ public class CKClassifier extends Classifier implements Runnable
 				j = 0;
 				neutralTaken = false;
 				// Cycle performed for each individual internal folder.
-				while ((j < numberOfInternalFolders) && (!Thread.currentThread().isInterrupted())) 
+				while ((j < listOfInternalFolders.length) && (!Thread.currentThread().isInterrupted())) 
 				{
 					File internalFolder = listOfInternalFolders[j];
 					File[] listOfFiles = internalFolder.listFiles();
 
-					// Verifies that the folders are composed of a sequence of three numbers.
+					// Verify that the folders are composed of a sequence of three numbers.
 					if (!internalFolder.getName().matches("[0-9]{3}")) 
 					{
 						ExceptionManager("The format of the folders in the input file is not the one expected.");
@@ -99,7 +96,7 @@ public class CKClassifier extends Classifier implements Runnable
 					// Read the internal file.
 					if (listOfFiles.length >= 1) 
 					{
-						// Verifies that the filename has the typical form of the CK+ database files.
+						// Verify that the filename has the typical form of the CK+ database files.
 						if (!listOfFiles[0].getName().matches("S[0-9]{3}_[0-9]{3}_[0-9]*_[a-z]{7}\\.[a-z]{3}")) 
 						{
 							ExceptionManager("The format of the images in the input file is not the one expected.");
@@ -122,7 +119,7 @@ public class CKClassifier extends Classifier implements Runnable
 							if (file.exists()) 
 							{
 								// Edit, classify and save the photo.
-								doOperationsWithFile(file, line);
+								doOperationsOnImage(file, line);
 							} 
 							else
 							{
@@ -132,7 +129,7 @@ public class CKClassifier extends Classifier implements Runnable
 						} 
 						catch (IOException e) 
 						{
-							ExceptionManager("There was a problem while trying to read an emotion file.");
+							ExceptionManager("There was an error while trying to read an emotion file.");
 							return;
 						}
 					}
@@ -146,7 +143,7 @@ public class CKClassifier extends Classifier implements Runnable
 						if (neutralFile.exists()) 
 						{
 							// Edit, classify and save the photo.
-							doOperationsWithFile(neutralFile, "0");
+							doOperationsOnImage(neutralFile, "0");
 							neutralTaken = true;
 						} 
 						else 
@@ -165,14 +162,16 @@ public class CKClassifier extends Classifier implements Runnable
 				Platform.runLater(() -> controller.setPhaseLabel("Phase 4: subdivision between train, validation and test folder..."));
 				if (!SubdivideImages(trainPercentage, validationPercentage, testPercentage)) 
 				{
+					ExceptionManager("There was an error while performing the subdivision.");
 					return;
 				}
 			}
 		}
+		boolean error = false;
 		// If a cancellation request has been made by the user, both temporary and classification folders will be deleted.
 		if (Thread.currentThread().isInterrupted()) 
 		{
-			DeleteAllDirectories();
+			error = DeleteAllDirectories();
 			Platform.runLater(() -> controller.ShowAttentionDialog("Classification interrupted.\n"));
 		}
 		// Otherwise only temporary ones will be deleted.
@@ -186,85 +185,82 @@ public class CKClassifier extends Classifier implements Runnable
 			{
 				Platform.runLater(() -> controller.setPhaseLabel("Phase 4: deleting temporary folders..."));
 			}
-			DeleteTempDirectory();
+			error = DeleteTempDirectory();
 		}
-
-		Platform.runLater(() -> controller.StartStopClassification(false, false));
+		// Reset the buttons if no errors occured.
+		if (!error)
+		{
+			Platform.runLater(() -> controller.StartStopClassification(false, false));
+		}
 	}
 
 	/* Method for editing, classifying and saving the photo. */
-	private void doOperationsWithFile(File file, String emotion) 
+	private void doOperationsOnImage(File file, String emotion) 
 	{
-		Mat image, resizedFace = Mat.zeros(imageSize, CvType.CV_8UC1);
-
-		// Open the image to be analyzed.
-		if (grayscale) 
-		{
-			image = Imgcodecs.imread(file.getAbsolutePath(), CvType.CV_8UC1);
-		} 
-		else 
-		{
-			image = Imgcodecs.imread(file.getAbsolutePath());
-		}
-
-		// Histogram equalization of the image (optional).
-		if (histogramEqualization) 
-		{
-			image = HistogramEqualization(image);
-		}
+		faceFound = true;
+		Mat image = Imgcodecs.imread(file.getAbsolutePath());
+		
 		// Face detection and image cropping (optional).
 		if (faceDetection) 
 		{
-			resizedFace = FrontalFaceDetection(image, resizedFace);
+			image = FrontalFaceDetection(image);
 		} 
-		else 
-		{
-			// Scaling the photo to the desired size.
-			Imgproc.resize(image, resizedFace, imageSize);
-		}
 
 		// Photo classification phase.
 		if (faceFound == true) 
 		{
+			// Resize the image.
+			Imgproc.resize(image, image, imageSize);
+			
+			// Conversion of the image in grayscale (optional).
+			if (grayscale) 
+			{
+				Imgproc.cvtColor(image, image, Imgproc.COLOR_BGR2GRAY);
+			}
+
+			// Histogram equalization of the image (optional).
+			if (histogramEqualization) 
+			{
+				image = HistogramEqualization(image);
+			}
+						
 			if (emotion.equals("0")) 
 			{
-				SaveImageInTheChosenFormat(neutralityDirectory.getAbsolutePath(), file.getName(), resizedFace);
+				SaveImageInTheChosenFormat(neutralityDirectory.getAbsolutePath(), file.getName(), image);
 			}
 			if (emotion.contains("1")) 
 			{
-				SaveImageInTheChosenFormat(angerDirectory.getAbsolutePath(), file.getName(), resizedFace);
+				SaveImageInTheChosenFormat(angerDirectory.getAbsolutePath(), file.getName(), image);
 			} 
 			else if (emotion.contains("2")) 
 			{
-				SaveImageInTheChosenFormat(contemptDirectory.getAbsolutePath(), file.getName(), resizedFace);
+				SaveImageInTheChosenFormat(contemptDirectory.getAbsolutePath(), file.getName(), image);
 			} 
 			else if (emotion.contains("3")) 
 			{
-				SaveImageInTheChosenFormat(disgustDirectory.getAbsolutePath(), file.getName(), resizedFace);
+				SaveImageInTheChosenFormat(disgustDirectory.getAbsolutePath(), file.getName(), image);
 			} 
 			else if (emotion.contains("4")) 
 			{
-				SaveImageInTheChosenFormat(fearDirectory.getAbsolutePath(), file.getName(), resizedFace);
+				SaveImageInTheChosenFormat(fearDirectory.getAbsolutePath(), file.getName(), image);
 			} 
 			else if (emotion.contains("5")) 
 			{
-				SaveImageInTheChosenFormat(happinessDirectory.getAbsolutePath(), file.getName(), resizedFace);
+				SaveImageInTheChosenFormat(happinessDirectory.getAbsolutePath(), file.getName(), image);
 			} 
 			else if (emotion.contains("6")) 
 			{
-				SaveImageInTheChosenFormat(sadnessDirectory.getAbsolutePath(), file.getName(), resizedFace);
+				SaveImageInTheChosenFormat(sadnessDirectory.getAbsolutePath(), file.getName(), image);
 			} 
 			else if (emotion.contains("7")) 
 			{
-				SaveImageInTheChosenFormat(surpriseDirectory.getAbsolutePath(), file.getName(), resizedFace);
+				SaveImageInTheChosenFormat(surpriseDirectory.getAbsolutePath(), file.getName(), image);
 			}
-			// Release of the initialized variables.
-			resizedFace.release();
 		}
-		// Release of the initialized variables.
+		// Release of the image.
 		image.release();
 
-		// Increase the count of the number of photos classified (or, if not classified, of the analyzed photos).
+		// Increase the count of the number of classified photos (or, if not classified, of the analyzed photos).
 		classified++;
 		// Calculation of the percentage of completion of the current operation and update of the classification progress bar.
 		percentage = (double) classified / (double) 450; // (327 labeled + 123 neutral)
