@@ -28,7 +28,7 @@
                   <Font size="14.0" />
                </font>
             </Button>
-            <Label alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="555.0" text="v4.0.0" />
+            <Label alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="555.0" text="v4.0.1" />
          </children>
          <BorderPane.margin>
             <Insets top="20.0" />

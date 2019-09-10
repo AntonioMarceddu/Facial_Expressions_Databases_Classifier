@@ -76,11 +76,8 @@ public class JAFFEClassifier extends Classifier implements Runnable
 							// Resize the image.
 							Imgproc.resize(image, image, imageSize);
 							
-							// Conversion of the image in grayscale (optional).
-							if (grayscale) 
-							{
-								Imgproc.cvtColor(image, image, Imgproc.COLOR_BGR2GRAY);
-							}
+							// Conversion of the image in 8 bit grayscale.
+							Imgproc.cvtColor(image, image, Imgproc.COLOR_BGR2GRAY);
 
 							// Histogram equalization of the image (optional).
 							if (histogramEqualization) 

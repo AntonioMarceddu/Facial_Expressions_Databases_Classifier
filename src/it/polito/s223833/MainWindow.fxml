@@ -52,7 +52,7 @@
                         <Font size="14.0" />
                      </font>
                   </RadioButton>
-                  <RadioButton fx:id="JAFFERadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="265.0" style="-fx-alignment: center;" text="Japanese Female Facial Expression (JAFFE)" textAlignment="CENTER" toggleGroup="$Database" wrapText="true">
+                  <RadioButton fx:id="JAFFERadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="265.0" style="-fx-alignment: center;" text="Japanese Female Facial Expression Database (JAFFE)" textAlignment="CENTER" toggleGroup="$Database" wrapText="true">
                      <font>
                         <Font size="14.0" />
                      </font>
@@ -67,7 +67,7 @@
                         <Font size="14.0" />
                      </font>
                   </RadioButton>
-                  <RadioButton fx:id="SFEW20RadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="265.0" style="-fx-alignment: center;" text="Static Facial Expressions in the Wild 2.0 (SFEW 2.0)" textAlignment="CENTER" toggleGroup="$Database" wrapText="true">
+                  <RadioButton fx:id="SFEW20RadioButton" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="265.0" style="-fx-alignment: center;" text="Static Facial Expressions in the Wild 2.0 Database (SFEW 2.0)" textAlignment="CENTER" toggleGroup="$Database" wrapText="true">
                      <font>
                         <Font size="14.0" />
                      </font>

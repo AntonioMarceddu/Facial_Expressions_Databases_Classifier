@@ -14,10 +14,10 @@ Facial Expression Database Classifier (FEDC) is a program able to automatically 
 * Extended Cohn-Kanade Database (CK+);
 * FACES Database;
 * Facial Expression Recognition 2013 Database (FER2013);
-* Japanese Female Facial Expression (JAFFE);
+* Japanese Female Facial Expression Database (JAFFE);
 * Multimedia Understanding Group Database (MUG);
 * Radboud Faces Database (RaFD);
-* Static Facial Expressions in the Wild 2.0 (SFEW 2.0).
+* Static Facial Expressions in the Wild 2.0 Database (SFEW 2.0).
 
 In practice, FEDC exploits the pre-classification implemented by databases creators. In addition to this, FEDC is also able to do several useful operations on images:
 * change image format;
@@ -52,6 +52,7 @@ Supported databases have features that make them different from one another:
 * 14/07/2019 - Version 3.0.0 released: support to FACES database has been added; the change image format function has been added; many corrections and improvements to the code and its readability have also been made.
 * 26/07/2019 - Version 3.1.0 released: option for creating or not the validation folder during the subdivision added; small fixes to the code have also been made.
 * 11/08/2019 - Version 4.0.0 released: support to SFEW 2.0 database has been added; support to FER+ annotations added; CLAHE option added; support to PGM and PPM formats added; option to transform database with rectangular images into squared ones added (currently only for SFEW 2.0); many corrections and improvements to the code and its readability have also been made.
+* 10/09/2019 - Version 4.0.1 released: minor corrections to GUI and JAFFE classifier.
 
 ### Final notes
 The images automatically classified with FEDC can be used, for example, for the training of a neural network capable of recognizing facial expressions, through the use of Keras or similar frameworks. Since the code of the program is freely usable, it is possible to implement small changes to make the program work even in totally different contexts.
@@ -70,10 +71,10 @@ Facial Expression Database Classifier (FEDC) è un programma in grado di classif
 * Extended Cohn-Kanade Database (CK+);
 * FACES Database;
 * Facial Expression Recognition 2013 Database (FER2013);
-* Japanese Female Facial Expression (JAFFE);
+* Japanese Female Facial Expression Database (JAFFE);
 * Multimedia Understanding Group Database (MUG);
 * Radboud Faces Database (RaFD);
-* Static Facial Expressions in the Wild 2.0 (SFEW 2.0).
+* Static Facial Expressions in the Wild 2.0 Database (SFEW 2.0).
 
 Nella pratica, FEDC sfrutta la pre-classificazione implementata dai creatori del database. Oltre a ciò, FEDC è anche in grado di eseguire diverse operazioni utili sulle immagini:
 * cambio del formato dell'immagine;
@@ -108,6 +109,7 @@ I database supportati hanno funzionalità che li rendono diversi l'uno dall'altr
 * 14/07/2019 - Versione 3.0.0 rilasciata: è stato aggiunto il supporto al FACES database; è stata aggiunta la funzione di cambio del formato dell'immagine; sono state inoltre apportate molte correzioni e miglioramenti al codice e alla sua leggibilità.
 * 26/07/2019 - Versione 3.1.0 rilasciata: opzionalità di creazione della cartella di validazione durante la suddivisione aggiunta; son state inoltre apportate piccole correzioni al codice.
 * 11/08/2019 - Versione 4.0.0 rilasciata: è stato aggiunto il supporto al database SFEW 2.0;  è stato aggiunto il supporto alle annotazioni FER+; è stata aggiunta l'opzione CLAHE; supporto ai formati PGM e PPM aggiunto; aggiunta opzione per trasformare database con immagini rettangolari in quadrati (attualmente solo per SFEW 2.0); sono state inoltre apportate molte correzioni e miglioramenti al codice e alla sua leggibilità.
+* 10/09/2019 - Versione 4.0.1 rilasciata: correzioni minori alla GUI e al classificatore JAFFE.
 
 ### Note finali
 Le immagini automaticamente classificate con FEDC possono essere utilizzate, ad esempio, per l'addestramento di una rete neurale in grado di riconoscere le espressioni facciali, attraverso l'uso di Keras o di framework simili. Essendo il codice del programma liberamente fruibile, è possibile attuare delle piccole modifiche per far si che il programma possa funzionare anche in contesti totalmente differenti.

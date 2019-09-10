@@ -57,10 +57,10 @@ public class InformationController
 						+ "•	Extended Cohn-Kanade Database (CK+);\r\n" 
 						+ "•	FACES Database;\r\n"
 						+ "•	Facial Expression Recognition 2013 Database (FER2013);\r\n"
-						+ "•	Japanese Female Facial Expression (JAFFE);\r\n"
+						+ "•	Japanese Female Facial Expression Database (JAFFE);\r\n"
 						+ "•	Multimedia Understanding Group Database (MUG);\r\n"
 						+ "•	Radboud Faces Database (RaFD);\r\n"
-						+ "•	Static Facial Expressions in the Wild 2.0 (SFEW 2.0).\r\n\n"
+						+ "•	Static Facial Expressions in the Wild 2.0 Database (SFEW 2.0).\r\n\n"
 						+ "In practice, FEDC exploits the pre-classification implemented by the database creators. In addition to this, FEDC is also able to do several useful operations on images:\r\n"
 						+ "•	change image format;\r\n"
 						+ "•	conversion in grayscale color space;\r\n"
@@ -124,7 +124,8 @@ public class InformationController
 				+ "•	10/07/2019 - Version 2.0.0 released: subdivision function between train, validation, and test dataset has been added; many minor improvements to the code and its readability have also been made.\r\n"
 				+ "•	14/07/2019 - Version 3.0.0 released: support to FACES database has been added; the change image format function has been added; many corrections and improvements to the code and its readability have also been made.\r\n"
 				+ "•	26/07/2019 - Version 3.1.0 released: option for creating or not the validation folder during the subdivision added; small fixes to the code have also been made.\r\n"
-				+ "•	11/08/2019 - Version 4.0.0 released: support to SFEW 2.0 database has been added; support to FER+ annotations added; CLAHE option added; support to PGM and PPM formats added; option to transform database with rectangular images into squared ones added (currently only for SFEW 2.0); many corrections and improvements to the code and its readability have also been made.\r\n\n\n");
+				+ "•	11/08/2019 - Version 4.0.0 released: support to SFEW 2.0 database has been added; support to FER+ annotations added; CLAHE option added; support to PGM and PPM formats added; option to transform database with rectangular images into squared ones added (currently only for SFEW 2.0); many corrections and improvements to the code and its readability have also been made.\r\n"
+				+ "•	10/09/2019 - Version 4.0.1 released: minor corrections to GUI and JAFFE classifier.\r\n\n\n");
 		InformationTextFlow.getChildren().add(text9);
 
 		Text text10 = new Text("FINAL NOTES\n\n");
