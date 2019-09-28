@@ -20,14 +20,16 @@ import it.polito.s223833.utils.UnzipClass;
 public class RaFDClassifier extends Classifier implements Runnable 
 {
 	private CascadeClassifier profileFaceCascade;
-	private boolean profile;
+	private boolean profile = false, squareImages = false;
 
-	public RaFDClassifier(Controller controller, String inputFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, int histogramEqualizationType, double tileSize, double contrastLimit, boolean faceDetection, boolean profile, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
+	public RaFDClassifier(Controller controller, String inputFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, int histogramEqualizationType, double tileSize, double contrastLimit, boolean faceDetection, boolean profile, boolean squareImages, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
 		super(controller, inputFile, outputDirectory, true, true, width, height, format, grayscale, histogramEqualization, histogramEqualizationType, tileSize, contrastLimit, faceDetection, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
 		// Search for profile photos.
 		this.profile = profile;
 		profileFaceCascade = new CascadeClassifier(haarclassifierpath + "haarcascade_profileface.xml");
+		// Make image square.
+		this.squareImages = squareImages;
 	}
 
 	@Override
@@ -69,7 +71,7 @@ public class RaFDClassifier extends Classifier implements Runnable
 				// Verifies that the filename has the typical form of the RaFD database files.
 				if ((file.isFile())	&& (file.getName().matches("Rafd[0-9]{3}_[0-9]{2}_[A-Z][a-z]*_[a-z]*_[a-z]*_[a-z]*\\.jpg"))) 
 				{
-					faceFound=true;
+					faceFound = true;
 					Mat image = Imgcodecs.imread(file.getAbsolutePath()), tempImage = new Mat(), face = new Mat();
 					
 					Imgproc.cvtColor(image, tempImage, Imgproc.COLOR_BGR2GRAY);
@@ -127,6 +129,12 @@ public class RaFDClassifier extends Classifier implements Runnable
 					// Photo classification phase.
 					if (faceFound == true) 
 					{
+						// Make image square (optional).
+						if (squareImages) 
+						{
+							image = MakeImageSquare(image);
+						}
+						
 						// Resize the image.
 						Imgproc.resize(image, image, imageSize);
 						

@@ -53,8 +53,8 @@ public class Classifier
 		
 		tempDirectory = outputDirectory + "\\temp\\";
 		
-		// Instancing of the CLAHE variable.
-		clahe = Imgproc.createCLAHE(tileSize, new Size(contrastLimit, contrastLimit));
+		// Instancing of the CLAHE functionality.
+		clahe = Imgproc.createCLAHE(contrastLimit, new Size(tileSize, tileSize));
 
 		// Instancing of the variable containing the dimensions of the target image.
 		imageSize = new Size(width, height);
@@ -246,6 +246,9 @@ public class Classifier
 	/* Method to delete the temporary directory. */
 	protected boolean DeleteTempDirectory() 
 	{
+		// Release memory allocated for CLAHE.
+		clahe.collectGarbage();
+		
 		try 
 		{
 			FileUtils.deleteDirectory(new File(tempDirectory));
@@ -262,6 +265,9 @@ public class Classifier
 	/* Method to delete all directories. */
 	protected boolean DeleteAllDirectories() 
 	{
+		// Release memory allocated for CLAHE.
+		clahe.collectGarbage();
+		
 		try 
 		{
 			FileUtils.cleanDirectory(new File(outputDirectory));
@@ -343,7 +349,7 @@ public class Classifier
 	        // Applies the CLAHE algorithm to the L channel.
 	        clahe.apply(channel, channel);
 
-	        // Merges the color planes back into an Lab image.
+	        // Merges the color planes back into a Lab image.
 	        Core.insertChannel(channel, image, 0);
 
 	        // Converts back to RGB.

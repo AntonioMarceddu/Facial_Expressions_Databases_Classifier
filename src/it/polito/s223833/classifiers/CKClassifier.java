@@ -17,14 +17,17 @@ import it.polito.s223833.utils.UnzipClass;
 public class CKClassifier extends Classifier implements Runnable 
 {
 	private String emotionFile;
-
-	public CKClassifier(Controller controller, String inputFile, String emotionFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, int histogramEqualizationType, double tileSize, double contrastLimit, boolean faceDetection, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
+	private boolean squareImages = false;
+	
+	public CKClassifier(Controller controller, String inputFile, String emotionFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, int histogramEqualizationType, double tileSize, double contrastLimit, boolean faceDetection, boolean squareImages, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
 		super(controller, inputFile, outputDirectory, true, true, width, height, format, grayscale, histogramEqualization, histogramEqualizationType, tileSize, contrastLimit, faceDetection, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
 		// Minimum face size to search. Improves performance if set to a reasonable size, depending on the size of the faces of the people depicted in the database.
 		absoluteFaceSize = 200;
 		// Emotion file.
-		this.emotionFile = emotionFile;
+		this.emotionFile = emotionFile;		
+		// Make image square.
+		this.squareImages = squareImages;
 	}
 
 	@Override
@@ -199,6 +202,12 @@ public class CKClassifier extends Classifier implements Runnable
 	{
 		faceFound = true;
 		Mat image = Imgcodecs.imread(file.getAbsolutePath());
+		
+		// Make image square (optional).
+		if (squareImages) 
+		{
+			image = MakeImageSquare(image);
+		}
 		
 		// Face detection and image cropping (optional).
 		if (faceDetection) 

@@ -509,7 +509,23 @@ public class Controller
 									// Verify that the file containing the emotion labels exists.
 									if (emotionFileTest.exists()) 
 									{
-										CKClassifier classifier = new CKClassifier(this, inputFile, inputFile2, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), histogramEqualizationType, tileSize, contrastLimit, FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+										boolean squareImages = false;
+										if(!FaceDetectionCheckBox.isSelected())
+										{
+											// Alert for make square images.
+											Alert alert = new Alert(AlertType.CONFIRMATION);
+											alert.setTitle("Facial Expression Database Classificator");
+											alert.setHeaderText("Request");
+											alert.setContentText("The CK+ database has non-square images. Do you want FEDC to make them square?");
+											Optional<ButtonType> option2 = alert.showAndWait();
+
+											if (option2.get() == ButtonType.OK) 
+											{
+												squareImages = true;
+											}
+										}	
+										
+										CKClassifier classifier = new CKClassifier(this, inputFile, inputFile2, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), histogramEqualizationType, tileSize, contrastLimit, FaceDetectionCheckBox.isSelected(), squareImages, EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 										classifierThread = new Thread(classifier);
 										classify = true;
 									} 
@@ -529,7 +545,22 @@ public class Controller
 								// Verifies that the user has chosen the correct files previously.
 								if (inputFile.substring(inputFile.lastIndexOf('\\') + 1).matches("([a-zA-Z]{3}_){2}[0-9]{2}_[0-9]{2}(-[0-9]{2}){2}_CEST_[0-9]{4}\\.zip")) 
 								{
-									FACESClassifier classifier = new FACESClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), histogramEqualizationType, tileSize, contrastLimit, FaceDetectionCheckBox.isSelected(), EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+									boolean squareImages = false;
+									if(!FaceDetectionCheckBox.isSelected())
+									{
+										// Alert for make square images.
+										Alert alert = new Alert(AlertType.CONFIRMATION);
+										alert.setTitle("Facial Expression Database Classificator");
+										alert.setHeaderText("Request");
+										alert.setContentText("The FACES database has non-square images. Do you want FEDC to make them square?");
+										Optional<ButtonType> option2 = alert.showAndWait();
+
+										if (option2.get() == ButtonType.OK) 
+										{
+											squareImages = true;
+										}
+									}	
+									FACESClassifier classifier = new FACESClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), histogramEqualizationType, tileSize, contrastLimit, FaceDetectionCheckBox.isSelected(), squareImages, EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 									classifierThread = new Thread(classifier);
 									classify = true;
 								} 
@@ -646,7 +677,7 @@ public class Controller
 								if (inputFile.contains("RafDDownload-")) 
 								{
 									RaFDClassifier classifier = null;
-									boolean profileImages = false;
+									boolean profileImages = false, squareImages = false;
 									if (FaceDetectionCheckBox.isSelected()) 
 									{
 										Alert alert = new Alert(AlertType.CONFIRMATION);
@@ -662,7 +693,21 @@ public class Controller
 											profileImages = true;
 										} 
 									} 
-									classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), histogramEqualizationType, tileSize, contrastLimit, FaceDetectionCheckBox.isSelected(), profileImages, EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
+									else
+									{
+										// Alert for make square images.
+										Alert alert = new Alert(AlertType.CONFIRMATION);
+										alert.setTitle("Facial Expression Database Classificator");
+										alert.setHeaderText("Request");
+										alert.setContentText("The RAFD database has non-square images. Do you want FEDC to make them square?");
+										Optional<ButtonType> option2 = alert.showAndWait();
+
+										if (option2.get() == ButtonType.OK) 
+										{
+											squareImages = true;
+										}
+									}
+									classifier = new RaFDClassifier(this, inputFile, outputDirectory, width, height, format, GrayscaleCheckBox.isSelected(), HistogramEqualizationCheckBox.isSelected(), histogramEqualizationType, tileSize, contrastLimit, FaceDetectionCheckBox.isSelected(), profileImages, squareImages, EnableSubdivisionCheckBox.isSelected(), validation, TrainSlider.getValue() / (double) 100, ValidationSlider.getValue() / (double) 100, TestSlider.getValue() / (double) 100);
 									classifierThread = new Thread(classifier);
 									classify = true;
 								} 
@@ -713,7 +758,7 @@ public class Controller
 									} 
 									
 									// Alert for make square images.
-									alert.setContentText("The SFEW 2.0 database has non-squared images. Do you want FEDC to make them squared?");
+									alert.setContentText("The SFEW 2.0 database has non-square images. Do you want FEDC to make them square?");
 									Optional<ButtonType> option2 = alert.showAndWait();
 
 									if (option2.get() == ButtonType.OK) 

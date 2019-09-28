@@ -13,11 +13,14 @@ import javafx.application.Platform;
 
 public class FACESClassifier extends Classifier implements Runnable 
 {
-	public FACESClassifier(Controller controller, String inputFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, int histogramEqualizationType, double tileSize, double contrastLimit, boolean faceDetection, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
+	private boolean squareImages = false;
+	public FACESClassifier(Controller controller, String inputFile, String outputDirectory, int width, int height, int format, boolean grayscale, boolean histogramEqualization, int histogramEqualizationType, double tileSize, double contrastLimit, boolean faceDetection, boolean squareImages, boolean subdivision, boolean validation, double trainPercentage, double validationPercentage, double testPercentage) 
 	{
 		super(controller, inputFile, outputDirectory, false, false, width, height, format, grayscale, histogramEqualization, histogramEqualizationType, tileSize, contrastLimit, faceDetection, subdivision, validation, trainPercentage, validationPercentage, testPercentage);
 		// Minimum face size to search. Improves performance if set to a reasonable size, depending on the size of the faces of the people depicted in the database.
-		absoluteFaceSize = 1500;
+		absoluteFaceSize = 1500;		
+		// Make image square.
+		this.squareImages = squareImages;
 	}
 
 	@Override
@@ -66,7 +69,7 @@ public class FACESClassifier extends Classifier implements Runnable
 				// Verify that the filename has the typical form of the FACES database files.
 				if ((file.isFile()) && (file.getName().matches("[0-9]{3}(_[a-z]){4}\\.jpg"))) 
 				{
-					faceFound=true;
+					faceFound = true;
 					Mat image = Imgcodecs.imread(file.getAbsolutePath());
 					
 					// Face detection and image cropping (optional).
@@ -78,6 +81,12 @@ public class FACESClassifier extends Classifier implements Runnable
 					// Photo classification phase.
 					if (faceFound == true) 
 					{
+						// Make image square (optional).
+						if (squareImages) 
+						{
+							image = MakeImageSquare(image);
+						}
+						
 						// Resize the image.
 						Imgproc.resize(image, image, imageSize);
 						

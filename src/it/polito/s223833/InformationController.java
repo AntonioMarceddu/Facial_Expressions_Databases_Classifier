@@ -68,7 +68,7 @@ public class InformationController
 						+ "•	histogram equalization (normal or CLAHE);\r\n"
 						+ "•	scaling of horizontal and vertical resolutions;\r\n"
 						+ "•	subdivision in train, validation (optional) and test dataset;\r\n"
-						+ "•	transformation of rectangular images into squared ones through the addition of padding (SFEW 2.0 only).\r\n\n"
+						+ "•	transformation of rectangular images into squared ones (can only be activated if the \"Face Detection and Crop\" option is not selected).\r\n\n"
 						+ "This allows, for the people who use these databases, to reduce to the minimum the time necessary for their classification and to minimize the code for activities such as, for example, the training of a neural network.\r\n\n\n"); 
 		InformationTextFlow.getChildren().add(text2);
 
@@ -76,9 +76,9 @@ public class InformationController
 		text3.setFill(Color.DARKVIOLET);
 		InformationTextFlow.getChildren().add(text3);
 
-		Text text4 = new Text("FEDC has a clean and essential user interface, consisting of four macroareas:\r\n"
+		Text text4 = new Text("FEDC has a clean and essential user interface, consisting of four macro-areas:\r\n"
 				+ "•	on the left column it is possible to choose the database to be classified;\r\n"
-				+ "•	in the other columns it is possible to select the operations to be performed on the photos: those available have already been mentioned previously;\r\n"
+				+ "•	on the other columns it is possible to select the operations to be performed on the photos: those available have already been mentioned previously;\r\n"
 				+ "•	on the lower part of the window there are buttons for selecting input file, output folder, and for starting and canceling the classification;\r\n"
 				+ "•	finally, above the buttons, there is the progress bar, that indicates the progression of the current operation.\r\n\n\n");
 		InformationTextFlow.getChildren().add(text4);
@@ -125,7 +125,8 @@ public class InformationController
 				+ "•	14/07/2019 - Version 3.0.0 released: support to FACES database has been added; the change image format function has been added; many corrections and improvements to the code and its readability have also been made.\r\n"
 				+ "•	26/07/2019 - Version 3.1.0 released: option for creating or not the validation folder during the subdivision added; small fixes to the code have also been made.\r\n"
 				+ "•	11/08/2019 - Version 4.0.0 released: support to SFEW 2.0 database has been added; support to FER+ annotations added; CLAHE option added; support to PGM and PPM formats added; option to transform database with rectangular images into squared ones added (currently only for SFEW 2.0); many corrections and improvements to the code and its readability have also been made.\r\n"
-				+ "•	10/09/2019 - Version 4.0.1 released: minor corrections to GUI and JAFFE classifier.\r\n\n\n");
+				+ "•	10/09/2019 - Version 4.0.1 released: minor corrections to GUI and JAFFE classifier.\r\n"
+				+ "•	28/09/2019 - Version 4.0.2 released: option to transform images into square ones added for CK+, FACES and RaFD database.\r\n\n\n");
 		InformationTextFlow.getChildren().add(text9);
 
 		Text text10 = new Text("FINAL NOTES\n\n");

@@ -179,7 +179,7 @@
                         </TextField>
                      </children>
                   </HBox>
-                  <CheckBox fx:id="FaceDetectionCheckBox" alignment="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="265.0" text="Face Detection and Cut" textAlignment="CENTER">
+                  <CheckBox fx:id="FaceDetectionCheckBox" alignment="CENTER" mnemonicParsing="false" prefHeight="60.0" prefWidth="265.0" text="Face Detection and Crop" textAlignment="CENTER">
                      <font>
                         <Font size="14.0" />
                      </font>
