@@ -25,7 +25,7 @@ public class Main extends Application
 			// Scene creation.
 			Scene scene = new Scene(rootElement);
 			// Creation and visualization of the stage with the chosen title and with the scene previously created.
-			primaryStage.setTitle("Facial Expression Database Classifier");
+			primaryStage.setTitle("Facial Expressions Databases Classifier");
 			primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("icon.png")));
 			primaryStage.setScene(scene);
 			primaryStage.show();

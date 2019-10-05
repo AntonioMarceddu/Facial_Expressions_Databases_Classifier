@@ -1,24 +1,24 @@
-# Facial Expression Database Classifier
+# Facial Expressions Databases Classifier
 
-[![forthebadge](https://forthebadge.com/images/badges/made-with-java.svg)](https://github.com/AntonioMarceddu/Facial_Expression_Database_Classifier)
+[![forthebadge](https://forthebadge.com/images/badges/made-with-java.svg)](https://github.com/AntonioMarceddu/Facial_Expressions_Databases_Classifier)
 
-[![Generic badge](https://img.shields.io/badge/Uses-OpenCV-blueviolet.svg)](https://github.com/AntonioMarceddu/Facial_Expression_Database_Classifier)
-[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/AntonioMarceddu/Facial_Expression_Database_Classifier/blob/master/LICENSE.txt)
-[![Generic badge](https://img.shields.io/badge/Version-4.0.2-71bdef.svg)](https://github.com/AntonioMarceddu/Facial_Expression_Database_Classifier)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/AntonioMarceddu/Facial_Expression_Database_Classifier/graphs/commit-activity)
+[![Generic badge](https://img.shields.io/badge/Uses-OpenCV-blueviolet.svg)](https://github.com/AntonioMarceddu/Facial_Expressions_Databases_Classifier)
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/AntonioMarceddu/Facial_Expressions_Databases_Classifier/blob/master/LICENSE.txt)
+[![Generic badge](https://img.shields.io/badge/Version-4.0.2-71bdef.svg)](https://github.com/AntonioMarceddu/Facial_Expressions_Databases_Classifier)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/AntonioMarceddu/Facial_Expressions_Databases_Classifier/graphs/commit-activity)
 [![Ask Me Anything !](https://img.shields.io/badge/Ask%20me-anything-1abc9c.svg)](https://www.linkedin.com/in/antonio-marceddu/)
 
 <p align="center">
-    <img src="https://github.com/AntonioMarceddu/Facial_Expression_Database_Classifier/blob/master/Resources/FEDC1.png"><br>
-	Screenshot of the Facial Expression Database Classifier program.
+    <img src="https://github.com/AntonioMarceddu/Facial_Expressions_Databases_Classifier/blob/master/Resources/FEDC1.png"><br>
+	Screenshot of the Facial Expressions Databases Classifier program.
 </p>
 
 Description available in english and italian below. License is at the bottom of page.
 
 ## English
 
-### Facial Expression Database Classifier
-Facial Expression Database Classifier (FEDC) is a program able to automatically classify images of some of the most used databases, depicting posed human faces:
+### Facial Expressions Databases Classifier
+Facial Expressions Databases Classifier (FEDC) is a program able to automatically classify images of some of the most used databases, depicting posed human faces:
 * Extended Cohn-Kanade Database (CK+);
 * FACES Database;
 * Facial Expression Recognition 2013 Database (FER2013);
@@ -62,6 +62,7 @@ Supported databases have features that make them different from one another:
 * 11/08/2019 - Version 4.0.0 released: support to SFEW 2.0 database has been added; support to FER+ annotations added; CLAHE option added; support to PGM and PPM formats added; option to transform database with rectangular images into squared ones added (currently only for SFEW 2.0); many corrections and improvements to the code and its readability have also been made.
 * 10/09/2019 - Version 4.0.1 released: minor corrections to GUI and JAFFE classifier.
 * 28/09/2019 - Version 4.0.2 released: option to transform images into square ones added for CK+, FACES and RaFD database.
+* 05/10/2019 - Version 4.0.3 released: minor corrections to the code and the GUI, minor changes to the program name.
 
 ### Final notes
 The images automatically classified with FEDC can be used, for example, for the training of a neural network capable of recognizing facial expressions, through the use of Keras or similar frameworks. Since the code of the program is freely usable, it is possible to implement small changes to make the program work even in totally different contexts.
@@ -69,14 +70,14 @@ The images automatically classified with FEDC can be used, for example, for the 
 Access to the databases mentioned above is usually allowed only for research purposes: for more information, consult the sites related to the databases. FEDC was created by [Antonio Costantino Marceddu](https://www.linkedin.com/in/antonio-marceddu/) resorting to Eclipse, with Java and the addition of the OpenCV framework.
 
 <p align="center">
-    <img src="https://github.com/AntonioMarceddu/Facial_Expression_Database_Classifier/blob/master/Resources/FEDC2.png"><br>
-	Screenshot of the Facial Expression Database Classifier program.
+    <img src="https://github.com/AntonioMarceddu/Facial_Expressions_Databases_Classifier/blob/master/Resources/FEDC2.png"><br>
+	Screenshot of the Facial Expressions Databases Classifier program.
 </p>
 
 ## Italiano
 
-### Facial Expression Database Classifier
-Facial Expression Database Classifier (FEDC) è un programma in grado di classificare automaticamente le immagini di alcuni tra i database utilizzati, raffiguranti volti umani in posa:
+### Facial Expressions Databases Classifier
+Facial Expressions Databases Classifier (FEDC) è un programma in grado di classificare automaticamente le immagini di alcuni tra i database utilizzati, raffiguranti volti umani in posa:
 * Extended Cohn-Kanade Database (CK+);
 * FACES Database;
 * Facial Expression Recognition 2013 Database (FER2013);
@@ -119,7 +120,8 @@ I database supportati hanno funzionalità che li rendono diversi l'uno dall'altr
 * 26/07/2019 - Versione 3.1.0 rilasciata: opzionalità di creazione della cartella di validazione durante la suddivisione aggiunta; son state inoltre apportate piccole correzioni al codice.
 * 11/08/2019 - Versione 4.0.0 rilasciata: è stato aggiunto il supporto al database SFEW 2.0;  è stato aggiunto il supporto alle annotazioni FER+; è stata aggiunta l'opzione CLAHE; supporto ai formati PGM e PPM aggiunto; aggiunta opzione per trasformare database con immagini rettangolari in quadrati (attualmente solo per SFEW 2.0); sono state inoltre apportate molte correzioni e miglioramenti al codice e alla sua leggibilità.
 * 10/09/2019 - Versione 4.0.1 rilasciata: correzioni minori alla GUI e al classificatore JAFFE.
-* 28/09/2019 - Version 4.0.2 rilasciata: opzione per trasformare le immagini rettangolari in quadrate aggiunta per i database CK+, FACES e RaFD.
+* 28/09/2019 - Versione 4.0.2 rilasciata: opzione per trasformare le immagini rettangolari in quadrate aggiunta per i database CK+, FACES e RaFD.
+* 05/10/2019 - Versione 4.0.3 rilasciata: piccole correzioni al codice e alla GUI, piccole modifiche al nome del programma.
 
 ### Note finali
 Le immagini automaticamente classificate con FEDC possono essere utilizzate, ad esempio, per l'addestramento di una rete neurale in grado di riconoscere le espressioni facciali, attraverso l'uso di Keras o di framework simili. Essendo il codice del programma liberamente fruibile, è possibile attuare delle piccole modifiche per far si che il programma possa funzionare anche in contesti totalmente differenti.
@@ -127,8 +129,8 @@ Le immagini automaticamente classificate con FEDC possono essere utilizzate, ad 
 L'accesso ai database sopra menzionati è solitamente consentito al solo scopo di ricerca: per ulteriori informazioni, consultare i siti relativi ai database. FEDC è stato creato da [Antonio Costantino Marceddu](https://www.linkedin.com/in/antonio-marceddu/) ricorrendo a Eclipse, con Java e con l'aggiunta del framework OpenCV.
 
 <p align="center">
-	<img src="https://github.com/AntonioMarceddu/Facial_Expression_Database_Classifier/blob/master/Resources/FEDC3.png"><br>
-	Screenshot of the Facial Expression Database Classifier program.
+	<img src="https://github.com/AntonioMarceddu/Facial_Expressions_Databases_Classifier/blob/master/Resources/FEDC3.png"><br>
+	Screenshot of the Facial Expressions Databases Classifier program.
 </p>
 
 ## License

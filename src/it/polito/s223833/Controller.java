@@ -460,7 +460,7 @@ public class Controller
 						{
 							int histogramEqualizationType=0;
 							// If the CLAHE option has been selected, check if the user has chosen the tile size and the contrast limit values.
-							if(CLAHERadioButton.isSelected())
+							if((HistogramEqualizationCheckBox.isSelected()) && (CLAHERadioButton.isSelected()))
 							{
 								//Set the histogram equalization type to CLAHE.
 								histogramEqualizationType=1;
@@ -484,8 +484,7 @@ public class Controller
 									ShowAttentionDialog("The value that has been given for the contrast limit is not a double or is empty. It will be set to the default value (4).");
 									contrastLimit=4;
 								}
-							}
-							
+							}							
 							
 							boolean classify = false;
 							
@@ -513,12 +512,8 @@ public class Controller
 										if(!FaceDetectionCheckBox.isSelected())
 										{
 											// Alert for make square images.
-											Alert alert = new Alert(AlertType.CONFIRMATION);
-											alert.setTitle("Facial Expression Database Classificator");
-											alert.setHeaderText("Request");
-											alert.setContentText("The CK+ database has non-square images. Do you want FEDC to make them square?");
+											Alert alert = showConfirmationDialog("The CK+ database has non-square images. Do you want FEDC to make them square?");
 											Optional<ButtonType> option2 = alert.showAndWait();
-
 											if (option2.get() == ButtonType.OK) 
 											{
 												squareImages = true;
@@ -549,12 +544,8 @@ public class Controller
 									if(!FaceDetectionCheckBox.isSelected())
 									{
 										// Alert for make square images.
-										Alert alert = new Alert(AlertType.CONFIRMATION);
-										alert.setTitle("Facial Expression Database Classificator");
-										alert.setHeaderText("Request");
-										alert.setContentText("The FACES database has non-square images. Do you want FEDC to make them square?");
+										Alert alert = showConfirmationDialog("The FACES database has non-square images. Do you want FEDC to make them square?");
 										Optional<ButtonType> option2 = alert.showAndWait();
-
 										if (option2.get() == ButtonType.OK) 
 										{
 											squareImages = true;
@@ -594,32 +585,19 @@ public class Controller
 									}
 									if (!EnableSubdivisionCheckBox.isSelected()) 
 									{
-										Alert alert = new Alert(AlertType.CONFIRMATION);
-										alert.setTitle("Facial Expression Database Classificator");
-										alert.setHeaderText("Request");
-										alert.setContentText("The FER2013 has a field for an automatic subdivision of images between training, validation and test datasets. Do you want FEDC to use it to split images in this way?");
-										((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText("Yes");
-										((Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("No");
+										Alert alert = showConfirmationDialog("The FER2013 has a field for an automatic subdivision of images between training, validation and test datasets. Do you want FEDC to use it to split images in this way?");
 										Optional<ButtonType> option = alert.showAndWait();
-
 										if (option.get() == ButtonType.OK) 
 										{
 											defaultSubdivision=true;
 										} 
 									}
 									
-									Alert alert = new Alert(AlertType.CONFIRMATION);
-									alert.setTitle("Facial Expression Database Classificator");
-									alert.setHeaderText("Request");
-									alert.setContentText("FEDC can use the FER+ annotations, freely downloadable from https://github.com/microsoft/FERPlus; these annotations improves the default ones. Do you want FEDC to use them to classify images?");
-									((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText("Yes");
-									((Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("No");
+									Alert alert = showConfirmationDialog("FEDC can use the FER+ annotations, freely downloadable from https://github.com/microsoft/FERPlus; these annotations improves the default ones. Do you want FEDC to use them to classify images?");
 									Optional<ButtonType> option = alert.showAndWait();
-
 									if (option.get() == ButtonType.OK) 
 									{
-										File ferPlusFile = CreateInputFileChooser(false, "", "Choose FER+ annotations file", "fer2013new.csv");
-										
+										File ferPlusFile = CreateInputFileChooser(false, "", "Choose FER+ annotations file", "fer2013new.csv");										
 										if (ferPlusFile != null) 
 										{
 											ferPlusPath=ferPlusFile.getAbsolutePath();
@@ -680,14 +658,8 @@ public class Controller
 									boolean profileImages = false, squareImages = false;
 									if (FaceDetectionCheckBox.isSelected()) 
 									{
-										Alert alert = new Alert(AlertType.CONFIRMATION);
-										alert.setTitle("Facial Expression Database Classificator");
-										alert.setHeaderText("Request");
-										alert.setContentText("The RaFD database also contains non-frontal images. Do you want FEDC to try to classify them with the haar classifier for profiles? The result is not guaranteed to be optimal as it is for frontal images.");
-										((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText("Yes");
-										((Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("No");
+										Alert alert = showConfirmationDialog("The RaFD database also contains non-frontal images. Do you want FEDC to try to classify them with the haar classifier for profiles? The result is not guaranteed to be optimal as it is for frontal images.");
 										Optional<ButtonType> option = alert.showAndWait();
-
 										if (option.get() == ButtonType.OK) 
 										{
 											profileImages = true;
@@ -696,12 +668,8 @@ public class Controller
 									else
 									{
 										// Alert for make square images.
-										Alert alert = new Alert(AlertType.CONFIRMATION);
-										alert.setTitle("Facial Expression Database Classificator");
-										alert.setHeaderText("Request");
-										alert.setContentText("The RAFD database has non-square images. Do you want FEDC to make them square?");
+										Alert alert = showConfirmationDialog("The RAFD database has non-square images. Do you want FEDC to make them square?");
 										Optional<ButtonType> option2 = alert.showAndWait();
-
 										if (option2.get() == ButtonType.OK) 
 										{
 											squareImages = true;
@@ -729,14 +697,8 @@ public class Controller
 									}
 									if (!EnableSubdivisionCheckBox.isSelected()) 
 									{
-										Alert alert = new Alert(AlertType.CONFIRMATION);
-										alert.setTitle("Facial Expression Database Classificator");
-										alert.setHeaderText("Request");
-										alert.setContentText("The SFEW 2.0 database has a predefined subdivision of images between training, validation and test datasets. Do you want FEDC to use the same subdivision?");
-										((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText("Yes");
-										((Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("No");
+										Alert alert = showConfirmationDialog("The SFEW 2.0 database has a predefined subdivision of images between training, validation and test datasets. Do you want FEDC to use the same subdivision?");
 										Optional<ButtonType> option = alert.showAndWait();
-
 										if (option.get() == ButtonType.OK) 
 										{
 											defaultSubdivision=true;
@@ -744,14 +706,8 @@ public class Controller
 									}
 									
 									// Alert for removing bad images.
-									Alert alert = new Alert(AlertType.CONFIRMATION);
-									alert.setTitle("Facial Expression Database Classificator");
-									alert.setHeaderText("Request");
-									alert.setContentText("The SFEW 2.0 database has some images that do not represent human faces or that have a wrong cut. Do you want FEDC to remove them automatically?");
-									((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText("Yes");
-									((Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("No");
+									Alert alert = showConfirmationDialog("The SFEW 2.0 database has some images that do not represent human faces or that have a wrong cut. Do you want FEDC to remove them automatically?");
 									Optional<ButtonType> option1 = alert.showAndWait();
-
 									if (option1.get() == ButtonType.OK) 
 									{
 										removeBadImages = true;
@@ -760,7 +716,6 @@ public class Controller
 									// Alert for make square images.
 									alert.setContentText("The SFEW 2.0 database has non-square images. Do you want FEDC to make them square?");
 									Optional<ButtonType> option2 = alert.showAndWait();
-
 									if (option2.get() == ButtonType.OK) 
 									{
 										squareImages = true;
@@ -843,12 +798,24 @@ public class Controller
 		PhaseLabel.setText(text);
 		updateProgressBar(0);
 	}
+	
+	/* Public method for creating a confirmation dialog. */
+	public Alert showConfirmationDialog(String message)
+	{
+		Alert alert = new Alert(AlertType.CONFIRMATION);
+		alert.setTitle("Facial Expressions Databases Classifier");
+		alert.setHeaderText("Request");
+		alert.setContentText(message);
+		((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText("Yes");
+		((Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("No");
+		return alert;
+	}
 
 	/* Public method for creating an information dialog. */
 	public void showInformationDialog(String message) 
 	{
 		Alert alert = new Alert(AlertType.INFORMATION);
-		alert.setTitle("Facial Expression Database Classificator");
+		alert.setTitle("Facial Expressions Databases Classifier");
 		alert.setHeaderText("Information");
 		alert.setContentText(message);
 		alert.showAndWait();
@@ -858,7 +825,7 @@ public class Controller
 	public void ShowAttentionDialog(String message) 
 	{
 		Alert alert = new Alert(AlertType.WARNING);
-		alert.setTitle("Facial Expression Database Classificator");
+		alert.setTitle("Facial Expressions Databases Classifier");
 		alert.setHeaderText("Attention");
 		alert.setContentText(message);
 		alert.showAndWait();
@@ -868,7 +835,7 @@ public class Controller
 	public void ShowErrorDialog(String message) 
 	{
 		Alert alert = new Alert(AlertType.ERROR);
-		alert.setTitle("Facial Expression Database Classificator");
+		alert.setTitle("Facial Expressions Databases Classifier");
 		alert.setHeaderText("Error");
 		alert.setContentText(message);
 		alert.showAndWait();

@@ -49,11 +49,11 @@ public class InformationController
 	/* Method for text writing. */
 	private void WriteTextFlowContent() 
 	{
-		Text text1 = new Text("\nINTRODUCTION TO FACIAL EXPRESSION DATABASE CLASSIFIER\n\n");
+		Text text1 = new Text("\nINTRODUCTION TO FACIAL EXPRESSIONS DATABASES CLASSIFIER\n\n");
 		text1.setFill(Color.DARKVIOLET);
 		InformationTextFlow.getChildren().add(text1);
 
-		Text text2 = new Text("Facial Expression Database Classifier (FEDC) is a program able to automatically classify images of some of the most used databases, depicting posed human faces:\r\n"
+		Text text2 = new Text("Facial Expressions Databases Classifier (FEDC) is a program able to automatically classify images of some of the most used databases, depicting posed human faces:\r\n"
 						+ "•	Extended Cohn-Kanade Database (CK+);\r\n" 
 						+ "•	FACES Database;\r\n"
 						+ "•	Facial Expression Recognition 2013 Database (FER2013);\r\n"
@@ -126,7 +126,8 @@ public class InformationController
 				+ "•	26/07/2019 - Version 3.1.0 released: option for creating or not the validation folder during the subdivision added; small fixes to the code have also been made.\r\n"
 				+ "•	11/08/2019 - Version 4.0.0 released: support to SFEW 2.0 database has been added; support to FER+ annotations added; CLAHE option added; support to PGM and PPM formats added; option to transform database with rectangular images into squared ones added (currently only for SFEW 2.0); many corrections and improvements to the code and its readability have also been made.\r\n"
 				+ "•	10/09/2019 - Version 4.0.1 released: minor corrections to GUI and JAFFE classifier.\r\n"
-				+ "•	28/09/2019 - Version 4.0.2 released: option to transform images into square ones added for CK+, FACES and RaFD database.\r\n\n\n");
+				+ "•	28/09/2019 - Version 4.0.2 released: option to transform images into square ones added for CK+, FACES and RaFD database.\r\n"
+				+ "•	05/10/2019 - Version 4.0.3 released: minor corrections to the code and the GUI, minor changes to the program name.\r\n\"\n\n");
 		InformationTextFlow.getChildren().add(text9);
 
 		Text text10 = new Text("FINAL NOTES\n\n");
@@ -170,7 +171,7 @@ public class InformationController
 			{
 				try 
 				{
-					Desktop.getDesktop().browse(new URI("https://github.com/AntonioMarceddu/Facial_Expression_Database_Classifier"));
+					Desktop.getDesktop().browse(new URI("https://github.com/AntonioMarceddu/Facial_Expressions_Databases_Classifier"));
 				}
 				catch (URISyntaxException | IOException e1) 
 				{
